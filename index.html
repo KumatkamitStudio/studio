@@ -1309,7 +1309,7 @@
                      `*Message:*\n${message}`;
         
         const encodedText = encodeURIComponent(text);
-        const waUrl = `https://wa.me081514655518/${phoneNumber}?text=${encodedText}`;
+       const waUrl = `https://wa.me/${phoneNumber}?text=${encodedText}`;
 
         setTimeout(() => {
             window.open(waUrl, '_blank');
