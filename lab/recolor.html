@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Recolor Pro - SVG Recolor Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A0A0A;
+            color: #1a1a1a;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .svg-container svg {
+            width: 100%;
+            height: 100%;
+            max-height: 500px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+        }
+        .pattern-grid {
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 24px 24px;
+            background-color: #ffffff;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #05472A; border-radius: 10px; }
+        
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
+        
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoom-in-95 { from { transform: scale(0.95); } to { transform: scale(1); } }
+        .animate-in { animation-duration: 400ms; animation-fill-mode: both; }
+        .fade-in { animation-name: fade-in; }
+        .zoom-in-95 { animation-name: zoom-in-95; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+      }
+    }
+    </script>
+
+    <script type="module">
+        import React, { useState, useMemo, useRef, useEffect } from 'react';
+        import ReactDOM from 'react-dom';
+        import { 
+            Upload, Download, RefreshCcw, Layers, 
+            ArrowRight, Info, Image as ImageIcon, Trash2, 
+            Check, Save 
+        } from 'lucide-react';
+
+        const PRESET_PALETTES = [
+            { id: 'p1', name: 'Premium Dark', colors: ['#0A0A0A', '#05472A', '#f8f8f8', '#111111'] },
+            { id: 'p2', name: 'Nordic Blue', colors: ['#0f172a', '#3b82f6', '#94a3b8', '#f8fafc'] },
+            { id: 'p3', name: 'Cyber Neon', colors: ['#000000', '#22c55e', '#ff0055', '#7000ff'] },
+            { id: 'p4', name: 'Earth Clay', colors: ['#451a03', '#92400e', '#d97706', '#fef3c7'] },
+        ];
+
+        const extractUniqueColors = (svgContent) => {
+            const hexRegex = /#(?:[0-9a-fA-F]{3}){1,2}\b/g;
+            const rgbRegex = /rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)/g;
+            const hexMatches = svgContent.match(hexRegex) || [];
+            const rgbMatches = svgContent.match(rgbRegex) || [];
+            return Array.from(new Set([...hexMatches, ...rgbMatches].map(c => c.toLowerCase())));
+        };
+
+        const applyColorMapping = (svgContent, mappings) => {
+            let modifiedSvg = svgContent;
+            const sortedOriginals = Object.keys(mappings).sort((a, b) => b.length - a.length);
+            for (const original of sortedOriginals) {
+                const replacement = mappings[original];
+                const escaped = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escaped, 'gi');
+                modifiedSvg = modifiedSvg.replace(regex, replacement);
+            }
+            return modifiedSvg;
+        };
+
+        const App = () => {
+            const [svgContent, setSvgContent] = useState(null);
+            const [originalColors, setOriginalColors] = useState([]);
+            const [colorMappings, setColorMappings] = useState({});
+            const [savedPalettes, setSavedPalettes] = useState([]);
+            const [error, setError] = useState(null);
+            const [isSaved, setIsSaved] = useState(false);
+            const fileInputRef = useRef(null);
+
+            useEffect(() => {
+                const stored = localStorage.getItem('svg-pro-palettes');
+                if (stored) {
+                    try { setSavedPalettes(JSON.parse(stored)); } catch (e) { console.error(e); }
+                }
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('svg-pro-palettes', JSON.stringify(savedPalettes));
+            }, [savedPalettes]);
+
+            const handleFileUpload = (event) => {
+                const file = event.target.files?.[0];
+                if (!file || file.type !== 'image/svg+xml') {
+                    setError("Please upload a valid SVG file.");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target?.result;
+                    setSvgContent(content);
+                    const extracted = extractUniqueColors(content);
+                    setOriginalColors(extracted);
+                    const initialMap = {};
+                    extracted.forEach(c => initialMap[c] = c);
+                    setColorMappings(initialMap);
+                    setError(null);
+                };
+                reader.readAsText(file);
+            };
+
+            const saveCurrentPalette = () => {
+                if (originalColors.length === 0) return;
+                const currentColors = originalColors.map(c => colorMappings[c]);
+                const newPalette = {
+                    id: Date.now().toString(),
+                    name: `Variation ${savedPalettes.length + 1}`,
+                    colors: currentColors
+                };
+                setSavedPalettes([newPalette, ...savedPalettes]);
+                setIsSaved(true);
+                setTimeout(() => setIsSaved(false), 2000);
+            };
+
+            const applyPalette = (palette) => {
+                if (originalColors.length === 0) return;
+                const newMappings = {};
+                originalColors.forEach((color, index) => {
+                    newMappings[color] = palette.colors[index % palette.colors.length];
+                });
+                setColorMappings(newMappings);
+            };
+
+            const handleDownload = () => {
+                if (!svgContent) return;
+                const finalSvg = applyColorMapping(svgContent, colorMappings);
+                const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'recolored-identity.svg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const renderedSvg = useMemo(() => {
+                if (!svgContent) return null;
+                return applyColorMapping(svgContent, colorMappings);
+            }, [svgContent, colorMappings]);
+
+            return React.createElement('div', { className: "min-h-screen flex flex-col bg-[#0A0A0A]" },
+                /* Header */
+                React.createElement('header', { className: "pt-12 pb-8 text-center flex flex-col items-center" },
+                    React.createElement('h1', { className: "text-3xl font-bold tracking-tight text-[#f8f8f8]" }, "Vector Recolor Pro"),
+                    React.createElement('p', { className: "text-[#05472A] mt-2 font-bold uppercase text-[10px] tracking-[0.4em]" }, "Vector Recolor Tool • Professional Edition")
+                ),
+
+                /* Main Content */
+                React.createElement('main', { className: "flex-1 flex flex-col lg:flex-row max-w-[1400px] mx-auto w-full p-4 lg:p-10 gap-8" },
+                    /* Sidebar Controls */
+                    React.createElement('aside', { className: "w-full lg:w-[380px] flex flex-col gap-6 shrink-0" },
+                        
+                        /* Box 1: Source (White Background) */
+                        React.createElement('div', { className: "bg-white p-6 rounded-[2rem] border border-white/10 shadow-xl" },
+                            React.createElement('label', { className: "text-[10px] font-black text-[#05472A] uppercase tracking-[0.3em] mb-4 block" }, "01 / Source Asset"),
+                            React.createElement('div', { 
+                                onClick: () => fileInputRef.current?.click(),
+                                className: "border-2 border-dashed border-gray-100 rounded-[1.5rem] p-6 text-center cursor-pointer hover:border-[#05472A] hover:bg-gray-50 transition-all group"
+                            },
+                                React.createElement('input', { type: "file", ref: fileInputRef, onChange: handleFileUpload, className: "hidden", accept: ".svg" }),
+                                React.createElement('div', { className: "w-12 h-12 bg-[#05472A]/10 rounded-full flex items-center justify-center mx-auto mb-3" },
+                                    React.createElement(Upload, { className: "w-5 h-5 text-[#05472A]" })
+                                ),
+                                React.createElement('p', { className: "text-sm font-bold text-gray-800" }, "Upload SVG File"),
+                                React.createElement('p', { className: "text-[9px] text-gray-400 mt-1 uppercase tracking-widest" }, "SVG 1.1+ Supported")
+                            ),
+                            error && React.createElement('p', { className: "mt-4 text-[10px] text-red-500 font-bold text-center" }, error)
+                        ),
+
+                        /* Box 2: Palette (White Background) */
+                        React.createElement('div', { className: "bg-white p-6 rounded-[2rem] border border-white/10 shadow-xl" },
+                            React.createElement('div', { className: "flex items-center justify-between mb-6" },
+                                React.createElement('label', { className: "text-[10px] font-black text-[#05472A] uppercase tracking-[0.3em]" }, "02 / Color Profile"),
+                                svgContent && React.createElement('button', { 
+                                    onClick: saveCurrentPalette,
+                                    className: `flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black transition-all ${isSaved ? 'bg-green-100 text-green-600' : 'bg-[#05472A] text-white hover:opacity-90'}`
+                                },
+                                    isSaved ? React.createElement(Check, { className: "w-3 h-3" }) : React.createElement(Save, { className: "w-3 h-3" }),
+                                    isSaved ? 'SAVED' : 'SAVE COMBO'
+                                )
+                            ),
+                            React.createElement('div', { className: "space-y-6" },
+                                React.createElement('div', null,
+                                    React.createElement('p', { className: "text-[9px] font-bold text-gray-300 uppercase tracking-widest mb-3" }, "Presets"),
+                                    React.createElement('div', { className: "grid grid-cols-2 gap-2" },
+                                        PRESET_PALETTES.map(p => React.createElement('button', { 
+                                            key: p.id, onClick: () => applyPalette(p),
+                                            className: "flex items-center gap-2 p-2 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-all text-left"
+                                        },
+                                            React.createElement('div', { className: "flex -space-x-1" },
+                                                p.colors.slice(0, 3).map((c, i) => React.createElement('div', { key: i, className: "w-3 h-3 rounded-full border border-white", style: { backgroundColor: c } }))
+                                            ),
+                                            React.createElement('span', { className: "text-[9px] font-bold text-gray-500" }, p.name)
+                                        ))
+                                    )
+                                ),
+                                savedPalettes.length > 0 && React.createElement('div', null,
+                                    React.createElement('p', { className: "text-[9px] font-bold text-gray-300 uppercase tracking-widest mb-3" }, "History"),
+                                    React.createElement('div', { className: "space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar pr-2" },
+                                        savedPalettes.map(p => React.createElement('div', { 
+                                            key: p.id, 
+                                            className: "group flex items-center justify-between p-2 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all border border-gray-50", 
+                                            onClick: () => applyPalette(p) 
+                                        },
+                                            React.createElement('div', { className: "flex items-center gap-3" },
+                                                React.createElement('div', { className: "flex -space-x-1" },
+                                                    p.colors.slice(0, 4).map((c, i) => React.createElement('div', { key: i, className: "w-4 h-4 rounded-full border border-white", style: { backgroundColor: c } }))
+                                                ),
+                                                React.createElement('span', { className: "text-[9px] font-bold text-gray-600" }, p.name)
+                                            ),
+                                            React.createElement('button', { 
+                                                onClick: (e) => { e.stopPropagation(); setSavedPalettes(prev => prev.filter(x => x.id !== p.id)); },
+                                                className: "opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all"
+                                            }, React.createElement(Trash2, { className: "w-3 h-3" }))
+                                        ))
+                                    )
+                                )
+                            )
+                        ),
+
+                        /* Box 3: Inspector (White Background) */
+                        React.createElement('div', { className: "bg-white p-6 rounded-[2rem] border border-white/10 shadow-xl flex-1 flex flex-col" },
+                            React.createElement('div', { className: "flex items-center justify-between mb-6" },
+                                React.createElement('label', { className: "text-[10px] font-black text-[#05472A] uppercase tracking-[0.3em]" }, "03 / Inspector"),
+                                originalColors.length > 0 && React.createElement('button', { 
+                                    onClick: () => {
+                                        const resetMap = {};
+                                        originalColors.forEach(c => resetMap[c] = c);
+                                        setColorMappings(resetMap);
+                                    },
+                                    className: "p-2 hover:bg-gray-100 rounded-lg text-gray-300 hover:text-gray-600 transition-all"
+                                }, React.createElement(RefreshCcw, { className: "w-4 h-4" }))
+                            ),
+                            React.createElement('div', { className: "space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-2" },
+                                originalColors.length === 0 ? React.createElement('div', { className: "py-10 text-center opacity-10" },
+                                    React.createElement(Layers, { className: "w-8 h-8 mx-auto mb-2" }),
+                                    React.createElement('p', { className: "text-[9px] font-bold uppercase tracking-widest" }, "Empty")
+                                ) : originalColors.map((color, i) => React.createElement('div', { key: i, className: "flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 group transition-all" },
+                                    React.createElement('div', { className: "w-8 h-8 rounded-lg border border-white shrink-0 shadow-sm", style: { backgroundColor: color } }),
+                                    React.createElement(ArrowRight, { className: "w-3 h-3 text-gray-300" }),
+                                    React.createElement('input', { 
+                                        type: "color", 
+                                        value: colorMappings[color], 
+                                        onChange: (e) => setColorMappings({...colorMappings, [color]: e.target.value}),
+                                        className: "flex-1 h-8 rounded-lg border-none cursor-pointer p-0 bg-transparent"
+                                    })
+                                ))
+                            )
+                        )
+                    ),
+
+                    /* Preview Area (White Background) */
+                    React.createElement('section', { className: "flex-1 flex flex-col gap-6" },
+                        React.createElement('div', { className: "bg-white border border-white/10 rounded-[3rem] shadow-xl flex-1 flex flex-col p-8 lg:p-10 relative overflow-hidden" },
+                            React.createElement('div', { className: "flex items-center justify-between mb-8" },
+                                React.createElement('div', null,
+                                    React.createElement('h2', { className: "text-xl font-black text-gray-900 tracking-tight" }, "Studio Preview"),
+                                    React.createElement('div', { className: "flex items-center gap-2 mt-1" },
+                                        React.createElement('div', { className: "w-1.5 h-1.5 rounded-full bg-[#05472A] animate-pulse" }),
+                                        React.createElement('span', { className: "text-[9px] font-black text-gray-300 uppercase tracking-[0.3em]" }, "Live Rendering Engine")
+                                    )
+                                ),
+                                svgContent && React.createElement('div', { className: "flex gap-2" },
+                                    React.createElement('button', { 
+                                        onClick: handleDownload,
+                                        className: "bg-[#05472A] text-white px-6 py-2 rounded-full font-bold text-[10px] tracking-widest uppercase hover:opacity-90 transition-all flex items-center gap-2"
+                                    }, React.createElement(Download, { className: "w-3 h-3" }), "Export"),
+                                    React.createElement('button', { 
+                                        onClick: () => { setSvgContent(null); setOriginalColors([]); setColorMappings({}); },
+                                        className: "p-2 bg-gray-50 text-gray-300 hover:text-red-500 rounded-full transition-all"
+                                    }, React.createElement(Trash2, { className: "w-4 h-4" }))
+                                )
+                            ),
+
+                            React.createElement('div', { className: "flex-1 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center justify-center relative overflow-hidden pattern-grid" },
+                                renderedSvg ? React.createElement('div', { 
+                                    className: "w-full h-full p-10 lg:p-20 flex items-center justify-center svg-container animate-in fade-in zoom-in-95",
+                                    dangerouslySetInnerHTML: { __html: renderedSvg } 
+                                }) : React.createElement('div', { className: "text-center" },
+                                    React.createElement('div', { className: "w-20 h-20 bg-white rounded-[1.5rem] shadow-lg flex items-center justify-center mx-auto mb-6 border border-gray-100" },
+                                        React.createElement(ImageIcon, { className: "w-8 h-8 text-gray-100" })
+                                    ),
+                                    React.createElement('h3', { className: "text-gray-200 font-black uppercase tracking-[0.4em] text-[10px]" }, "Identity Void"),
+                                    React.createElement('p', { className: "text-[9px] text-gray-300 mt-2 max-w-[200px] mx-auto uppercase tracking-widest leading-relaxed" }, "Drop a vector file to begin color mapping")
+                                )
+                            ),
+
+                            React.createElement('div', { className: "mt-8 flex items-center justify-between border-t border-gray-50 pt-8" },
+                                React.createElement('div', { className: "flex gap-10" },
+                                    React.createElement('div', null,
+                                        React.createElement('p', { className: "text-2xl font-black text-gray-900" }, originalColors.length),
+                                        React.createElement('p', { className: "text-[8px] font-black text-gray-300 uppercase tracking-widest" }, "Channels")
+                                    ),
+                                    React.createElement('div', null,
+                                        React.createElement('p', { className: "text-2xl font-black text-gray-900" }, savedPalettes.length),
+                                        React.createElement('p', { className: "text-[8px] font-black text-gray-300 uppercase tracking-widest" }, "Saved")
+                                    )
+                                ),
+                                React.createElement('div', { className: "hidden md:flex items-center gap-3 bg-[#05472A]/5 px-4 py-2 rounded-xl" },
+                                    React.createElement(Info, { className: "w-3 h-3 text-[#05472A]" }),
+                                    React.createElement('span', { className: "text-[8px] font-black text-[#05472A] uppercase tracking-widest" }, "Secure & Private Processing")
+                                )
+                            )
+                        ),
+                        React.createElement('footer', { className: "text-center text-white/10 text-[8px] font-bold uppercase tracking-[0.6em] mb-4" }, "Brand Strategy Hub • Pro Edition")
+                    )
+                )
+            );
+        };
+
+        ReactDOM.render(React.createElement(App), document.getElementById('root'));
+    </script>
+</body>
+</html>
