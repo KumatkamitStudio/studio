@@ -64,11 +64,86 @@
         } from 'lucide-react';
 
         const PRESET_PALETTES = [
-            { id: 'p1', name: 'Premium Dark', colors: ['#0A0A0A', '#05472A', '#f8f8f8', '#111111'] },
-            { id: 'p2', name: 'Nordic Blue', colors: ['#0f172a', '#3b82f6', '#94a3b8', '#f8fafc'] },
-            { id: 'p3', name: 'Cyber Neon', colors: ['#000000', '#22c55e', '#ff0055', '#7000ff'] },
-            { id: 'p4', name: 'Earth Clay', colors: ['#451a03', '#92400e', '#d97706', '#fef3c7'] },
-        ];
+    // ======================
+    // 2 COLOR PALETTES
+    // ======================
+    { id: 'c2-1', name: 'Black & White', colors: ['#0A0A0A', '#F8F8F8'] },
+    { id: 'c2-2', name: 'Midnight Blue', colors: ['#0f172a', '#38bdf8'] },
+    { id: 'c2-3', name: 'Forest Green', colors: ['#052e16', '#22c55e'] },
+    { id: 'c2-4', name: 'Luxury Gold', colors: ['#111827', '#facc15'] },
+    { id: 'c2-5', name: 'Soft Rose', colors: ['#881337', '#fda4af'] },
+    
+    // ======================
+    // 3 COLOR PALETTES
+    // ======================
+    { id: 'c3-1', name: 'Dark Accent', colors: ['#0A0A0A', '#05472A', '#F8F8F8'] },
+    { id: 'c3-2', name: 'Ocean Calm', colors: ['#0f172a', '#38bdf8', '#f8fafc'] },
+    { id: 'c3-3', name: 'Creative Neon', colors: ['#000000', '#22c55e', '#ff0055'] },
+    { id: 'c3-4', name: 'Warm Coffee', colors: ['#3f2d20', '#b45309', '#fde68a'] },
+    { id: 'c3-5', name: 'Soft Pastel', colors: ['#a5b4fc', '#fbcfe8', '#f8fafc'] },
+    
+    // ======================
+    // 4 COLOR PALETTES
+    // ======================
+    { id: 'c4-1', name: 'Premium Dark', colors: ['#0A0A0A', '#111111', '#05472A', '#F8F8F8'] },
+    { id: 'c4-2', name: 'Nordic Blue', colors: ['#0f172a', '#2563eb', '#94a3b8', '#f8fafc'] },
+    { id: 'c4-3', name: 'Cyber Neon', colors: ['#000000', '#22c55e', '#ff0055', '#7000ff'] },
+    { id: 'c4-4', name: 'Earth Natural', colors: ['#451a03', '#92400e', '#d97706', '#fef3c7'] },
+    { id: 'c4-5', name: 'Modern Purple', colors: ['#2e1065', '#7c3aed', '#c4b5fd', '#faf5ff'] },
+    
+    // ======================
+    // 6 COLOR PALETTES
+    // ======================
+    {
+        id: 'c6-1',
+        name: 'Dark UI Pro',
+        colors: ['#000000', '#0A0A0A', '#111827', '#1f2933', '#22c55e', '#F8F8F8']
+    },
+    {
+        id: 'c6-2',
+        name: 'Creative Studio',
+        colors: ['#020617', '#2563eb', '#22c55e', '#f97316', '#e11d48', '#f8fafc']
+    },
+    {
+        id: 'c6-3',
+        name: 'Soft SaaS',
+        colors: ['#0f172a', '#334155', '#64748b', '#38bdf8', '#a5f3fc', '#f8fafc']
+    },
+    
+    // ======================
+    // 9 COLOR PALETTES
+    // ======================
+    {
+        id: 'c9-1',
+        name: 'Dark System',
+        colors: [
+            '#000000',
+            '#0A0A0A',
+            '#111827',
+            '#1f2933',
+            '#374151',
+            '#22c55e',
+            '#38bdf8',
+            '#94a3b8',
+            '#ffffff'
+        ]
+    },
+    {
+        id: 'c9-2',
+        name: 'Light System Pro',
+        colors: [
+            '#020617',
+            '#1e293b',
+            '#334155',
+            '#64748b',
+            '#94a3b8',
+            '#cbd5e1',
+            '#e5e7eb',
+            '#f1f5f9',
+            '#ffffff'
+        ]
+    }
+];
 
         const extractUniqueColors = (svgContent) => {
             const hexRegex = /#(?:[0-9a-fA-F]{3}){1,2}\b/g;
@@ -203,13 +278,13 @@
                         /* Box 2: Palette (White Background) */
                         React.createElement('div', { className: "bg-white p-6 rounded-[2rem] border border-white/10 shadow-xl" },
                             React.createElement('div', { className: "flex items-center justify-between mb-6" },
-                                React.createElement('label', { className: "text-[10px] font-black text-[#05472A] uppercase tracking-[0.3em]" }, "02 / Color Profile"),
+                                React.createElement('label', { className: "text-[10px] font-black text-[#05472A] uppercase tracking-[0.3em]" }, "02 / Color Palette"),
                                 svgContent && React.createElement('button', { 
                                     onClick: saveCurrentPalette,
                                     className: `flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black transition-all ${isSaved ? 'bg-green-100 text-green-600' : 'bg-[#05472A] text-white hover:opacity-90'}`
                                 },
                                     isSaved ? React.createElement(Check, { className: "w-3 h-3" }) : React.createElement(Save, { className: "w-3 h-3" }),
-                                    isSaved ? 'SAVED' : 'SAVE COMBO'
+                                    isSaved ? 'SAVED' : 'Save Palette'
                                 )
                             ),
                             React.createElement('div', { className: "space-y-6" },
