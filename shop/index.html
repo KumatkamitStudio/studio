@@ -72,7 +72,7 @@
           </svg>
           <div class="flex flex-col leading-none">
             <span class="font-bold text-lg tracking-tight text-white">kumatkamit</span>
-            <span class="font-light text-[10px] tracking-[0.2em] uppercase text-emerald-400">digital shop</span>
+            <span class="font-light text-[10px] tracking-[0.2em] uppercase text-emerald-400">Market</span>
           </div>
         </a>
         
@@ -98,7 +98,7 @@
         <span class="inline-block px-4 py-1.5 mb-6 border border-emerald-500/30 rounded-full bg-emerald-950/40 text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Premium Assets</span>
         <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">Creative Toolkit</h1>
         <p class="text-emerald-100/60 max-w-2xl mx-auto text-lg font-light leading-relaxed">
-          Koleksi aset digital pilihan dari Kumatkamit Studio untuk mempercepat proses kreatif Anda.
+          Koleksi aset digital pilihan dari Kumatkamit Studio untuk anda.
         </p>
       </div>
     </header>
@@ -111,7 +111,7 @@
         <button class="filter-btn px-8 py-3 rounded-2xl text-sm font-bold bg-white text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-gray-100" data-category="brush">Brush Set</button>
         <button class="filter-btn px-8 py-3 rounded-2xl text-sm font-bold bg-white text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-gray-100" data-category="icon">Icon Pack</button>
         <button class="filter-btn px-8 py-3 rounded-2xl text-sm font-bold bg-white text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-gray-100" data-category="ebook">E-books</button>
-        <button class="filter-btn px-8 py-3 rounded-2xl text-sm font-bold bg-white text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-gray-100" data-category="video">Video Materi</button>
+        <button class="filter-btn px-8 py-3 rounded-2xl text-sm font-bold bg-white text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 transition-all border border-gray-100" data-category="font">font</button>
       </div>
 
       <!-- Product List -->
@@ -127,6 +127,7 @@
         <div>
           <h2 class="text-xl font-bold text-gray-900">Keranjang Belanja</h2>
           <p class="text-xs text-gray-400 mt-1">Selesaikan pesanan Anda via WhatsApp</p>
+          <p class="text-xs text-gray-400 mt-1">Konfirmasi dan item akan segera di kirim </p>
         </div>
         <button id="close-cart" class="p-2.5 bg-gray-50 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -161,14 +162,14 @@
 
       // Database Produk
       const products = [
-        { id: 1, name: 'Illumination Pro Brush Set', category: 'brush', price: 185000, image:'/content/hero3.png', desc: 'Satu set brush tekstur cahaya untuk Procreate & Photoshop.' },
-        { id: 2, name: '3D Glossy Icon Pack v2', category: 'icon', price: 120000, image: '/content/hero3.png', desc: '50+ Ikon 3D resolusi tinggi dalam format PNG & Blend.' },
-        { id: 3, name: 'The Art of Visual Storytelling', category: 'ebook', price: 95000, image:'/content/hero3.png', desc: 'E-book panduan mendalam tentang desain strategis.' },
-        { id: 4, name: 'Advanced Typography Mastery', category: 'video', price: 450000, image: '/content/hero3.png', desc: 'Materi video belajar Fotografi dari fundamental hingga advance.' },
+        { id: 1, name: 'Soullmon script', category: 'font', price: 185000, image:'itemarket/typefaceoSullmonscript.png', desc: 'Font untuk hasil tulisan tangan yang natural dan berkarakter.' },
+        { id: 2, name: 'Nyentrik', category: 'font', price: 120000, image: 'itemarket/typefaceNyentrik.png', desc: 'Font geometrik yang modern dan minimalis.' },
+        { id: 3, name: 'AI, Data, Finance Iconography', category: 'icon', price: 95000, image:'itemarket/IconographyAI.png', desc: 'Mini icon pack untuk kebutuhan pengelolaan data, finance, AI, dan smart app ' },
+        { id: 4, name: 'Advanced Typography Mastery', category: 'font', price: 450000, image: '/content/hero3.png', desc: 'Materi belajar Fotografi dari fundamental hingga advance.' },
         { id: 5, name: 'Organic Grain Brushes', category: 'brush', price: 150000, image: '/content/hero3.png', desc: 'Brush grain organik untuk memberi kesan vintage pada karya.' },
         { id: 6, name: 'Supergraphic untuk media', category: 'icon', price: 80000, image: '/content/hero3.png', desc: 'Aset vektor abstrak untuk keperluan branding.' },
         { id: 7, name: 'Designer\'s Pricing Guide', category: 'ebook', price: 75000, image:'/content/hero3.png', desc: 'Cara menentukan harga jasa kreatif yang menguntungkan.' },
-        { id: 8, name: 'Motion Graphic Workflow', category: 'video', price: 380000, image: '/content/hero3.png', desc: 'Rahasia workflow cepat dalam mengerjakan proyek motion.' }
+        { id: 8, name: 'Motion Graphic Workflow', category: 'font', price: 380000, image: '/content/hero3.png', desc: 'Rahasia workflow cepat dalam mengerjakan proyek motion.' }
       ];
 
       let cart = [];
@@ -345,6 +346,7 @@
   </body>
 
 </html>
+
 
 
 
