@@ -3,50 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kumatkamit.Studio - Price Calculator & Invoice</title>
+    <title>Kumatkamit.Studio - Price Calculator</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React, ReactDOM, & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Fonts: Plus Jakarta Sans -->
+    <!-- Fonts: Plus Jakarta Sans & Material Symbols Rounded -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
+    
     <style>
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             letter-spacing: -0.02em;
         }
-        @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            body { background: white; padding: 0; margin: 0; }
-            .shadow-2xl { box-shadow: none !important; }
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
         }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #059669; border-radius: 10px; }
         
-        .package-card-active {
-            border-color: #10b981;
-            background-color: #f0fdf4;
-            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.1);
-            transform: translateY(-4px);
-        }
-
         input::placeholder {
             color: #94a3b8;
             font-weight: 400;
-        }
-
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
     </style>
 </head>
@@ -56,154 +40,137 @@
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
 
-/* =======================
-   DATA PAKET BULANAN
-   ======================= */
-const PACKAGES = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    target: 'UMKM & Personal Brand',
-    desc: 'Paket awal untuk membangun identitas visual dan konten sosial media secara konsisten.',
-    features: [
-      { label: 'Logo Design Basic', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
-      { label: '8–12 Video Reels / TikTok / Short', icon: 'M15 10l4.55-2.27A1 1 0 0121 8.61v6.78a1 1 0 01-1.45.89L15 14v2a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2v2z' },
-      { label: 'Editing Foto Produk', icon: 'M4 5h16v14H4z' },
-      { label: 'Desain Feed / Post / Story', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1z' }
-    ],
-    price: [2500000, 3000000],
-    color: 'emerald-400'
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    target: 'Bisnis Bertumbuh',
-    popular: true,
-    desc: 'Solusi branding & konten yang lebih strategis untuk meningkatkan kredibilitas dan engagement.',
-    features: [
-      { label: 'Logo Design Standard', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
-      { label: 'Mini Branding + Guideline', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0z' },
-      { label: '12–20 Video Reels / TikTok', icon: 'M15 10l4.55-2.27A1 1 0 0121 8.61v6.78a1 1 0 01-1.45.89L15 14v2a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2v2z' },
-      { label: 'Video & Photo Shoot', icon: 'M3 7h18v10H3z' },
-      { label: 'Social Media Management', icon: 'M4 4h16v16H4z' },
-      { label: 'Ads & Campaign', icon: 'M9 19V6h6v13z' }
-    ],
-    price: [6000000, 10000000],
-    color: 'emerald-600'
-  },
-  {
-    id: 'suite',
-    name: 'Suite',
-    target: 'Corporate & Brand System',
-    desc: 'Paket branding menyeluruh untuk perusahaan dengan sistem visual dan strategi jangka panjang.',
-    features: [
-      { label: 'Branding Kit Lengkap', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
-      { label: 'Iconography & Custom Font', icon: 'M4 4h16v16H4z' },
-      { label: 'Company Profile', icon: 'M6 2h12v20H6z' },
-      { label: '20–30 Video Reels / TikTok', icon: 'M15 10l4.55-2.27A1 1 0 0121 8.61v6.78a1 1 0 01-1.45.89L15 14v2a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2v2z' },
-      { label: 'Social Media Management Full', icon: 'M4 4h16v16H4z' },
-      { label: 'Ads & Campaign Strategy', icon: 'M9 19V6h6v13z' }
-    ],
-    price: [12000000, 20000000],
-    color: 'emerald-800'
-  }
-];
+        const WA_NUMBER = '6281234567890'; 
 
-/* =======================
-   ADD ON / SATUAN
-   ======================= */
-const ADDONS = [
-  {
-    id: 'logo-basic',
-    name: 'Logo Design',
-    desc: 'Desain logo profesional yang merepresentasikan karakter brand dan siap digunakan di berbagai media.',
-    price: [300000, 1000000],
-    cat: 'Branding'
-  },
-  {
-    id: 'mini-brand',
-    name: 'Mini Branding',
-    desc: 'Paket branding ringkas meliputi logo, warna brand, dan font utama.',
-    price: [1500000, 3000000],
-    cat: 'Branding'
-  },
-  {
-    id: 'branding-kit',
-    name: 'Branding Kit',
-    desc: 'Solusi branding menyeluruh dengan guideline, color palette, tipografi, dan aplikasi visual.',
-    price: [5000000, 9000000],
-    cat: 'Branding'
-  },
-  {
-    id: 'reels',
-    name: 'Editing Reels / TikTok / Short',
-    desc: 'Editing video pendek yang dinamis dan engaging untuk meningkatkan reach & engagement.',
-    price: [150000, 300000],
-    unit: 'video',
-    cat: 'Video'
-  },
-  {
-    id: 'video-long',
-    name: 'Video Long',
-    desc: 'Video berdurasi panjang untuk YouTube, media edukasi, atau campaign storytelling.',
-    price: [250000, 500000],
-    unit: 'video',
-    cat: 'Video'
-  },
-  {
-    id: 'company-profile',
-    name: 'Pembuatan Company Profile',
-    desc: 'Produksi company profile dari konsep hingga editing untuk meningkatkan kredibilitas bisnis.',
-    price: [1000000, 2000000],
-    cat: 'Video'
-  },
-  {
-    id: 'photo',
-    name: 'Editing Foto Produk',
-    desc: 'Retouch dan color grading profesional agar produk terlihat lebih premium.',
-    price: [50000, 150000],
-    unit: 'foto',
-    cat: 'Design'
-  },
-  {
-    id: 'feed',
-    name: 'Desain Feed Sosmed',
-    desc: 'Desain konten Instagram/Facebook yang konsisten dan sesuai identitas brand.',
-    price: [100000, 250000],
-    unit: 'post',
-    cat: 'Design'
-  },
-  {
-    id: 'landing',
-    name: 'Landing Page / Website',
-    desc: 'Website dan landing page modern, responsif, dan fokus pada konversi.',
-    price: [2000000, 5000000],
-    cat: 'Web'
-  },
-  {
-    id: 'motion',
-    name: 'Motion Graphic / Animasi',
-    desc: 'Animasi visual menarik untuk kebutuhan promosi maupun edukasi.',
-    price: [200000, 200000],
-    unit: '10 detik',
-    cat: 'Motion'
-  },
-  {
-    id: 'gif',
-    name: 'GIF Item',
-    desc: 'Pembuatan GIF custom untuk promosi, website, atau sosial media.',
-    price: [100000, 150000],
-    unit: 'item',
-    cat: 'Motion'
-  }
-];
+        /* =======================
+           DATA PAKET BULANAN
+           ======================= */
+        const PACKAGES = [
+          {
+            id: 'starter',
+            name: 'Starter',
+            target: 'UMKM & Personal Brand',
+            desc: 'Paket awal untuk membangun identitas visual dan konten sosial media secara konsisten.',
+            features: [
+              { label: '10 Desain Feed / Post / Story', icon: 'draw' },
+              { label: '8 Video Reels / TikTok / Short', icon: 'smart_display' }
+            ],
+            price: [2500000, 3000000],
+            color: 'emerald-400'
+          },
+          {
+            id: 'pro',
+            name: 'Pro',
+            target: 'Bisnis Bertumbuh',
+            popular: true,
+            desc: 'Solusi branding & konten yang lebih strategis untuk meningkatkan kredibilitas dan engagement.',
+            features: [
+              { label: 'Social Media Management', icon: 'manage_accounts' },
+              { label: '15 Desain Feed / Post / Story', icon: 'draw' },
+              { label: '15 Video Reels / TikTok', icon: 'smart_display' },
+              { label: 'Ads & Campaign', icon: 'campaign' }
+            ],
+            price: [6000000, 10000000],
+            color: 'emerald-600'
+          },
+          {
+            id: 'suite',
+            name: 'Suite',
+            target: 'Corporate & Brand System',
+            desc: 'Paket branding menyeluruh untuk perusahaan dengan sistem visual dan strategi jangka panjang.',
+            features: [
+              { label: 'Social Media Management', icon: 'manage_accounts' },
+              { label: 'Video & Photo Shoot', icon: 'photo_camera' },
+              { label: '20 Desain Feed / Post / Story', icon: 'draw' },
+              { label: '20 Video Reels / TikTok', icon: 'smart_display' },
+              { label: 'Ads & Campaign Strategy', icon: 'campaign' }
+            ],
+            price: [12000000, 20000000],
+            color: 'emerald-800'
+          }
+        ];
 
-  
-        const COUPON_MAP = {
-            'U1RVRElPMTA=': { type: 'percent', value: 0.1, label: 'Kumatkamit Friend (10%)' }, // 
-            'S1VNQVRLQU1JVA==': { type: 'percent', value: 0.15, label: 'Official Partner (15%)' }, // 
-            'U1BFQ0lBTDIwMjU=': { type: 'fixed', value: 1000000, label: 'New Year Special (Rp 1jt)' } // 
-        };
+        /* =======================
+           ADD ON / SATUAN
+           ======================= */
+        const ADDONS = [
+          {
+            id: 'Logo design & branding guideline',
+            name: 'Logo design & Brand Guideline',
+            desc: 'Paket branding ringkas meliputi logo, warna brand, dan font utama.',
+            price: [2000000, 4000000],
+            cat: 'Branding'
+          },
+          {
+            id: 'Logo Design & Branding-Kit',
+            name: 'Logo Design & Branding Kit',
+            desc: 'Solusi branding menyeluruh dengan guideline, color palette, tipografi,icon, dan elmen visual.',
+            price: [6000000, 9000000],
+            cat: 'Branding'
+          },
+          {
+            id: 'reels',
+            name: 'Editing Reels / TikTok / Short',
+            desc: 'Editing video pendek yang dinamis dan engaging untuk meningkatkan reach & engagement.',
+            price: [150000, 300000],
+            unit: 'video',
+            cat: 'Video'
+          },
+          {
+            id: 'video-long',
+            name: 'Video Long',
+            desc: 'Video berdurasi panjang untuk YouTube, media edukasi, atau campaign storytelling.',
+            price: [250000, 500000],
+            unit: 'video',
+            cat: 'Video'
+          },
+          {
+            id: 'company-profile',
+            name: 'Pembuatan Company Profile',
+            desc: 'Produksi company profile dari konsep hingga editing untuk meningkatkan kredibilitas bisnis.',
+            price: [1000000, 2000000],
+            cat: 'Video'
+          },
+          {
+            id: 'photo',
+            name: 'Editing Foto Produk',
+            desc: 'Retouch dan color grading profesional agar produk terlihat lebih premium.',
+            price: [50000, 150000],
+            unit: 'foto',
+            cat: 'Design'
+          },
+          {
+            id: 'feed',
+            name: 'Desain Feed Sosmed',
+            desc: 'Desain konten Instagram/Facebook yang konsisten dan sesuai identitas brand.',
+            price: [100000, 250000],
+            unit: 'post',
+            cat: 'Design'
+          },
+          {
+            id: 'landing',
+            name: 'Landing Page / Website',
+            desc: 'Website dan landing page modern, responsif, dan fokus pada konversi.',
+            price: [3000000,5000000],
+            cat: 'Web'
+          },
+          {
+            id: 'motion',
+            name: 'Motion Graphic / Animasi',
+            desc: 'Animasi visual menarik untuk kebutuhan promosi maupun edukasi.',
+            price: [200000, 200000],
+            unit: '10 detik',
+            cat: 'Motion'
+          },
+          {
+            id: 'gif',
+            name: 'GIF Item',
+            desc: 'Pembuatan GIF custom untuk promosi, website, atau sosial media.',
+            price: [100000, 150000],
+            unit: 'item',
+            cat: 'Motion'
+          }
+        ];
 
         const AppLogo = ({ className }) => (
             <svg className={className} viewBox="0 0 1120 944" xmlns="https://www.w3.org/2000/svg" fill="currentColor">
@@ -213,190 +180,45 @@ const ADDONS = [
 
         const formatIDR = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 
-        const Invoice = ({ clientInfo, pkgId, selectedAddons, discount, onClose }) => {
-            const pkg = PACKAGES.find(p => p.id === pkgId);
-            const addons = selectedAddons.map(sa => ({ ...ADDONS.find(a => a.id === sa.id), qty: sa.qty }));
-            
-            const [subMin, subMax] = useMemo(() => {
-                let tMin = pkg ? pkg.price[0] : 0;
-                let tMax = pkg ? pkg.price[1] : 0;
-                addons.forEach(a => { tMin += a.price[0] * a.qty; tMax += a.price[1] * a.qty; });
-                return [tMin, tMax];
-            }, [pkg, addons]);
-
-            const discVal = useMemo(() => {
-                if (!discount) return 0;
-                if (discount.type === 'percent') return subMin * discount.value;
-                return discount.value;
-            }, [discount, subMin]);
-
-            const [min, max] = [subMin - discVal, subMax - discVal];
-            const invNum = `INV-${Math.floor(10000 + Math.random() * 90000)}`;
-            const date = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 no-print overflow-y-auto">
-                    <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col my-8 border border-emerald-100 min-h-fit overflow-hidden">
-                        <div className="p-6 border-b flex justify-between items-center bg-emerald-50/30 no-print">
-                            <h2 className="font-bold text-emerald-900 text-lg tracking-tight">Pratinjau Invoice</h2>
-                            <div className="flex gap-2">
-                                <button onClick={() => window.print()} className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">Cetak / PDF</button>
-                                <button onClick={onClose} className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all">Tutup</button>
-                            </div>
-                        </div>
-                        <div className="p-12 bg-white text-left">
-                            <div className="flex flex-col md:flex-row justify-between mb-16 gap-8">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex flex-col items-start leading-tight">
-                                        <div className="flex items-center gap-3">
-                                            <AppLogo className="h-9 w-auto text-emerald-800" />
-                                            <a href="https://kumatkamit.studio"></a>    
-                                            <span className="text-2xl font-semibold text-slate-800 tracking-tighter">Kumatkamit</span>
-                                        </div>
-                                        <span className="text-emerald-600 font-bold uppercase text-[9px] tracking-widest ml-[68px] -mt-1">studio</span>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <h3 className="text-3xl font-bold text-slate-800 tracking-tighter mb-1">INVOICE</h3>
-                                    <p className="text-emerald-600 font-bold text-sm tracking-widest">#{invNum}</p>
-                                    <p className="text-slate-400 text-xs font-medium mt-1">{date}</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-12 mb-12 py-8 border-y border-slate-100">
-                                <div>
-                                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-wider">Ditagih Untuk:</p>
-                                    <p className="text-xl font-bold text-slate-800 leading-tight mb-1">{clientInfo.name || 'Pelanggan'}</p>
-                                    {clientInfo.company && <p className="text-sm font-semibold text-slate-600 mb-2">{clientInfo.company}</p>}
-                                    <div className="space-y-1 mt-3">
-                                        {clientInfo.email && <p className="text-xs text-slate-500 flex items-center gap-2"><span className="font-bold text-slate-400 uppercase text-[9px]">Email:</span> {clientInfo.email}</p>}
-                                        {clientInfo.phone && <p className="text-xs text-slate-500 flex items-center gap-2"><span className="font-bold text-slate-400 uppercase text-[9px]">Phone:</span> {clientInfo.phone}</p>}
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-wider">Informasi Kontak:</p>
-                                    <p className="text-sm font-bold text-slate-700">kumatkamit.studio@gmail.com</p>
-                                    <p className="text-xs text-slate-400 mt-1">Jakarta, Indonesia</p>
-                                    <p className="text-[10px] text-slate-400 mt-4 italic font-medium">Estimasi Penawaran Layanan</p>
-                                </div>
-                            </div>
-                            <table className="w-full mb-12">
-                                <thead>
-                                    <tr className="border-b-2 border-slate-200 text-left">
-                                        <th className="py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Deskripsi Layanan</th>
-                                        <th className="py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Qty</th>
-                                        <th className="py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Harga</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {pkg && (
-                                        <tr>
-                                            <td className="py-6">
-                                                <p className="font-bold text-slate-800">Paket Branding: {pkg.name}</p>
-                                                <ul className="text-[10px] text-slate-400 mt-1 list-disc ml-4 space-y-0.5">
-                                                    {pkg.features.map((f, i) => <li key={i}>{f.label}</li>)}
-                                                </ul>
-                                            </td>
-                                            <td className="py-6 text-right font-medium text-slate-500">1 Paket</td>
-                                            <td className="py-6 text-right font-bold text-slate-800">{formatIDR(pkg.price[0])} - {formatIDR(pkg.price[1])}</td>
-                                        </tr>
-                                    )}
-                                    {addons.map((a, i) => (
-                                        <tr key={i}>
-                                            <td className="py-6">
-                                                <p className="font-bold text-slate-800">{a.name}</p>
-                                                <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">{a.cat}</p>
-                                            </td>
-                                            <td className="py-6 text-right font-medium text-slate-500">{a.qty} {a.unit || 'Item'}</td>
-                                            <td className="py-6 text-right font-bold text-slate-800">{formatIDR(a.price[0]*a.qty)} - {formatIDR(a.price[1]*a.qty)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <div className="flex justify-end pt-8 border-t-4 border-emerald-800">
-                                <div className="w-full max-w-sm space-y-4">
-                                    <div className="flex justify-between items-center text-slate-500">
-                                        <span className="text-[10px] font-bold uppercase tracking-wider">Subtotal</span>
-                                        <span className="font-bold text-slate-800">{formatIDR(subMin)} - {formatIDR(subMax)}</span>
-                                    </div>
-                                    {discount && (
-                                        <div className="flex justify-between items-center text-emerald-600">
-                                            <span className="text-[10px] font-bold uppercase italic tracking-wider">Diskon ({discount.label})</span>
-                                            <span className="font-bold">- {formatIDR(discVal)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between items-center pt-6 border-t border-slate-100">
-                                        <span className="text-lg font-bold text-slate-800">Total Estimasi</span>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-bold text-emerald-700 leading-none">{formatIDR(Math.max(0, min))} - {formatIDR(Math.max(0, max))}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
         const App = () => {
             const [clientInfo, setClientInfo] = useState({ name: '', company: '', email: '', phone: '' });
-            const [pkgId, setPkgId] = useState(null);
             const [selected, setSelected] = useState([]);
-            const [showInv, setShowInv] = useState(false);
-            const [couponCode, setCouponCode] = useState('');
-            const [appliedCoupon, setAppliedCoupon] = useState(null);
-            const [couponError, setCouponError] = useState('');
-            const [isChecking, setIsChecking] = useState(false);
-
-            const totals = useMemo(() => {
-                let min = 0, max = 0;
-                if (pkgId) {
-                    const p = PACKAGES.find(x => x.id === pkgId);
-                    min += p.price[0]; max += p.price[1];
-                }
-                selected.forEach(s => {
-                    const a = ADDONS.find(x => x.id === s.id);
-                    min += a.price[0] * s.qty; max += a.price[1] * s.qty;
-                });
-                
-                let discountVal = 0;
-                if (appliedCoupon) {
-                    discountVal = (appliedCoupon.type === 'percent') ? min * appliedCoupon.value : appliedCoupon.value;
-                }
-                return [Math.max(0, min - discountVal), Math.max(0, max - discountVal), discountVal];
-            }, [pkgId, selected, appliedCoupon]);
 
             const toggle = (id) => setSelected(prev => prev.find(i => i.id === id) ? prev.filter(i => i.id !== id) : [...prev, { id, qty: 1 }]);
             const updQty = (id, d) => setSelected(prev => prev.map(i => i.id === id ? { ...i, qty: Math.max(1, i.qty + d) } : i));
             const handleClientChange = (e) => setClientInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-            const applyCoupon = () => {
-                const code = couponCode.trim().toUpperCase();
-                if (!code) return;
-                setIsChecking(true);
-                
-                // based
-                setTimeout(() => {
-                    const hashed = btoa(code);
-                    if (COUPON_MAP[hashed]) {
-                        setAppliedCoupon(COUPON_MAP[hashed]);
-                        setCouponError('');
-                    } else {
-                        setAppliedCoupon(null);
-                        setCouponError('Kode tidak valid');
-                    }
-                    setIsChecking(false);
-                }, 400);
+            // 1. Handler Langsung ke WA untuk Paket Utama
+            const handlePackageWhatsApp = (pkg) => {
+                let text = `Halo Kumatkamit Studio, saya tertarik dengan *Paket Utama: ${pkg.name}*.%0A%0A`;
+                text += `Saya ingin berdiskusi lebih lanjut mengenai detail paket ini.`;
+                window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, '_blank');
             };
 
-            const removeCoupon = () => {
-                setAppliedCoupon(null);
-                setCouponCode('');
-                setCouponError('');
+            // 2. Handler untuk Layanan Kustom + Info Client
+            const handleCustomWhatsApp = () => {
+                const addonsList = selected.map(s => {
+                    const a = ADDONS.find(x => x.id === s.id);
+                    return `- ${a.name} (${s.qty} ${a.unit || 'Item'})`;
+                }).join('\n');
+
+                let text = `Halo Kumatkamit Studio, saya ingin memesan Layanan Custom berikut:%0A%0A`;
+                text += `*Daftar Layanan:*%0A`;
+                text += addonsList ? addonsList.replace(/\n/g, '%0A') : '- (Belum ada layanan dipilih)';
+                
+                text += `%0A%0A*Informasi Client:*%0A`;
+                text += `Nama: ${clientInfo.name || '-'}%0A`;
+                text += `Brand/Perusahaan: ${clientInfo.company || '-'}%0A`;
+                text += `Email: ${clientInfo.email || '-'}%0A`;
+                text += `Phone: ${clientInfo.phone || '-'}%0A`;
+
+                text += `%0AMohon informasinya untuk proses selanjutnya. Terima kasih!`;
+
+                window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, '_blank');
             };
 
             return (
-                <div className="min-h-screen pb-24 lg:pb-0 bg-slate-50">
+                <div className="min-h-screen bg-slate-50">
                     <nav className="sticky top-0 z-40 bg-emerald-950 text-white border-b border-emerald-800 px-8 py-5 shadow-xl">
                         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                             <div className="flex items-center gap-4">
@@ -410,190 +232,165 @@ const ADDONS = [
                         </div>
                     </nav>
 
-                    <main className="max-w-7xl mx-auto p-6 md:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
-                        <div className="lg:col-span-8 space-y-12">
-                            {/* SECTION 01: PACKAGES */}
-                            <section>
-                                <div className="flex items-center gap-4 mb-10 text-left">
-                                    <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-bold">1</div>
-                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Pilih Paket Utama</h2>
+                    <main className="max-w-6xl mx-auto p-6 md:p-10 space-y-16">
+                        
+                        {/* SECTION 01: PACKAGES (LANGSUNG KE WA) */}
+                        <section>
+                            <div className="flex items-center gap-4 mb-10 text-left">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-bold shadow-lg">
+                                    <span className="material-symbols-rounded text-[24px]">looks_one</span>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    {PACKAGES.map(p => {
-                                        const isActive = pkgId === p.id;
-                                        return (
-                                            <div key={p.id} onClick={() => setPkgId(p.id)} className={`relative cursor-pointer transition-all duration-300 rounded-[2rem] border-2 p-8 flex flex-col h-full overflow-hidden text-left ${isActive ? 'package-card-active border-emerald-500' : 'border-white bg-white hover:border-emerald-100 shadow-sm'}`}>
-                                                {isActive && <div className="absolute top-4 right-4 bg-emerald-500 text-white rounded-full p-1 shadow-md animate-in zoom-in duration-300"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></div>}
-                                                {p.popular && !isActive && <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Populer</div>}
-                                                <div className={`w-12 h-1 bg-${p.color} rounded-full mb-6`}></div>
-                                               <h3 className="text-2xl font-bold text-slate-800 leading-tight mb-1">
-  {p.name}
-</h3>
-
-<
-p className = "text-xs text-slate-400 font-bold uppercase tracking-wider" > { p.target }
-</p>
-
-{ /* DESKRIPSI PAKET */ }
-<p className="text-sm text-slate-600 leading-relaxed mt-2 mb-6">
-  {p.desc}
-</p>
-                                                <div className="space-y-4 mb-10 flex-grow">
-                                                    {p.features.map((f, idx) => (
-                                                        <div key={idx} className="flex items-start gap-3">
-                                                            <div className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-lg ${isActive ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-50 text-slate-400'} flex items-center justify-center`}><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={f.icon}></path></svg></div>
-                                                            <span className={`text-sm font-semibold leading-snug ${isActive ? 'text-emerald-900' : 'text-slate-600'}`}>{f.label}</span>
-                                                        </div>
-                                                    ))}
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Layanan Social Media Management</h2>
+                                    <p className="text-sm text-slate-500">Klik paket untuk langsung konsultasi via WhatsApp</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {PACKAGES.map(p => (
+                                    <div key={p.id} className="relative group hover:-translate-y-2 transition-all duration-300 rounded-[2rem] border-2 border-white bg-white hover:border-emerald-200 shadow-sm p-8 flex flex-col h-full text-left">
+                                        {p.popular && <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"><span className="material-symbols-rounded text-[14px]">star</span> Populer</div>}
+                                        <div className={`w-12 h-1 bg-${p.color} rounded-full mb-6`}></div>
+                                        <h3 className="text-2xl font-bold text-slate-800 leading-tight mb-1">{p.name}</h3>
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{p.target}</p>
+                                        <p className="text-sm text-slate-600 leading-relaxed mt-2 mb-6">{p.desc}</p>
+                                        <div className="space-y-4 mb-10 flex-grow">
+                                            {p.features.map((f, idx) => (
+                                                <div key={idx} className="flex items-start gap-3">
+                                                    <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
+                                                        <span className="material-symbols-rounded text-[18px]">{f.icon}</span>
+                                                    </div>
+                                                    <span className="text-sm font-semibold leading-snug text-slate-600 group-hover:text-slate-900 transition-colors pt-1">{f.label}</span>
                                                 </div>
-                                                <div className={`pt-6 border-t transition-colors ${isActive ? 'border-emerald-200' : 'border-slate-50'}`}>
-                                                    <p className={`text-[10px] font-bold uppercase mb-1 tracking-wider ${isActive ? 'text-emerald-600' : 'text-slate-400'}`}>Mulai Dari</p>
-                                                    <p className={`text-2xl font-bold ${isActive ? 'text-emerald-700' : 'text-slate-800'}`}>{formatIDR(p.price[0])}</p>
+                                            ))}
+                                        </div>
+                                        <div className="pt-6 border-t border-slate-50">
+                                            <p className="text-[10px] font-bold uppercase mb-1 tracking-wider text-slate-400">Mulai Dari</p>
+                                            <p className="text-2xl font-bold text-slate-800 mb-6">{formatIDR(p.price[0])}</p>
+                                            <button 
+                                                onClick={() => handlePackageWhatsApp(p)}
+                                                className="w-full py-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 group-hover:shadow-lg"
+                                            >
+                                                <span className="material-symbols-rounded">chat</span>
+                                                Pilih via WhatsApp
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* SECTION 02: ADDONS */}
+                        <section>
+                            <div className="flex items-center gap-4 mb-8 text-left">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-bold shadow-lg">
+                                    <span className="material-symbols-rounded text-[24px]">looks_two</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Layanan Branding & Editing </h2>
+                                    <p className="text-sm text-slate-500">Pilih layanan tambahan yang Anda butuhkan</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {ADDONS.map(a => {
+                                    const sel = selected.find(s => s.id === a.id);
+                                    return (
+                                        <div key={a.id} className={`flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${sel ? 'border-emerald-500 bg-emerald-50 shadow-md' : 'border-white bg-white hover:border-emerald-100 shadow-sm'}`}>
+                                            <div className="flex items-center gap-5">
+                                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center border transition-all ${sel ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-100 border-slate-200 text-transparent cursor-pointer'}`} onClick={() => toggle(a.id)}>
+                                                    <span className="material-symbols-rounded text-[18px]">check</span>
+                                                </div>
+                                                <div className="text-left cursor-pointer" onClick={() => toggle(a.id)}>
+                                                  <h4 className="font-bold text-slate-800 text-sm leading-tight">{a.name}</h4>
+                                                  <p className="text-xs text-slate-500 leading-snug mt-0.5 mb-1">{a.desc}</p>
+                                                  <p className="text-xs font-bold text-emerald-600 tracking-tight">{formatIDR(a.price[0])}</p>
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </section>
-
-                            {/* SECTION 02: ADDONS */}
-                            <section>
-                                <div className="flex items-center gap-4 mb-8 text-left">
-                                    <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-bold">2</div>
-                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Tambah Layanan Kustom</h2>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {ADDONS.map(a => {
-                                        const sel = selected.find(s => s.id === a.id);
-                                        return (
-                                            <div key={a.id} className={`flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${sel ? 'border-emerald-500 bg-emerald-50 shadow-md' : 'border-white bg-white hover:border-emerald-100 shadow-sm'}`}>
-                                                <div className="flex items-center gap-5">
-                                                    <input type="checkbox" checked={!!sel} onChange={() => toggle(a.id)} className="w-6 h-6 rounded-lg text-emerald-600 cursor-pointer border-slate-200 focus:ring-emerald-500" />
-                                                    <div className="text-left">
-                                                      <h4 className="font-bold text-slate-800 text-sm leading-tight">
-  {a.name}
-</h4>
-
-{ /* DESKRIPSI ADDON */ }
-<p className="text-xs text-slate-500 leading-snug mt-0.5 mb-1">
-  {a.desc}
-</p>
-
-<
-p className = "text-xs font-bold text-emerald-600 tracking-tight" > { formatIDR(a.price[0]) }
-</p>
-                                                    </div>
-                                                </div>
-                                                {sel && (
-                                                    <div className="flex items-center gap-4 bg-white p-1.5 rounded-xl border border-emerald-100 shadow-sm">
-                                                        <button onClick={() => updQty(a.id, -1)} className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-100 text-slate-600 transition-colors font-bold">-</button>
-                                                        <span className="font-bold text-slate-800 text-sm w-4 text-center">{sel.qty}</span>
-                                                        <button onClick={() => updQty(a.id, 1)} className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-100 text-slate-600 transition-colors font-bold">+</button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </section>
-
-                            {/* SECTION 03: CLIENT DETAILS */}
-                            <section>
-                                <div className="flex items-center gap-4 mb-8 text-left">
-                                    <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-bold">3</div>
-                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Informasi Client</h2>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                                    <div className="space-y-2 text-left">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-wider">Nama Client</label>
-                                        <input name="name" value={clientInfo.name} onChange={handleClientChange} type="text" placeholder="Nama Lengkap" className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
-                                    </div>
-                                    <div className="space-y-2 text-left">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-wider">Perusahaan / Brand</label>
-                                        <input name="company" value={clientInfo.company} onChange={handleClientChange} type="text" placeholder="Nama Brand" className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
-                                    </div>
-                                    <div className="space-y-2 text-left">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-wider">Alamat Email</label>
-                                        <input name="email" value={clientInfo.email} onChange={handleClientChange} type="email" placeholder="client@email.com" className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
-                                    </div>
-                                    <div className="space-y-2 text-left">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-wider">WhatsApp / HP</label>
-                                        <input name="phone" value={clientInfo.phone} onChange={handleClientChange} type="text" placeholder="0812-XXXX-XXXX" className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
-                                    </div>
-                                </div>
-                            </section>
-                        </div>
-
-                        {/* SIDEBAR CALCULATION */}
-                        <div className="lg:col-span-4">
-                            <div className="sticky top-28 bg-emerald-950 text-white rounded-[2.5rem] p-10 shadow-2xl overflow-hidden group">
-                                <div className="absolute -top-12 -right-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
-                                <h3 className="text-xs font-bold uppercase text-emerald-500 mb-10 opacity-70 text-left tracking-widest">Kalkulasi Layanan</h3>
-                                <div className="space-y-6 mb-12 max-h-[35vh] overflow-y-auto custom-scrollbar pr-3">
-                                    {pkgId || selected.length > 0 ? (
-                                        <>
-                                            {pkgId && (
-                                                <div className="flex justify-between items-center text-left">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-emerald-100">Paket {PACKAGES.find(p => p.id === pkgId).name}</span>
-                                                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Utama</span>
-                                                    </div>
-                                                    <span className="font-bold text-sm">{formatIDR(PACKAGES.find(p => p.id === pkgId).price[0])}</span>
+                                            {sel && (
+                                                <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-emerald-100 shadow-sm">
+                                                    <button onClick={() => updQty(a.id, -1)} className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-100 text-slate-600 transition-colors font-bold flex items-center justify-center">
+                                                        <span className="material-symbols-rounded text-[16px]">remove</span>
+                                                    </button>
+                                                    <span className="font-bold text-slate-800 text-sm w-4 text-center">{sel.qty}</span>
+                                                    <button onClick={() => updQty(a.id, 1)} className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-100 text-slate-600 transition-colors font-bold flex items-center justify-center">
+                                                        <span className="material-symbols-rounded text-[16px]">add</span>
+                                                    </button>
                                                 </div>
                                             )}
-                                            {selected.map(s => {
-                                                const a = ADDONS.find(x => x.id === s.id);
-                                                return (
-                                                    <div key={s.id} className="flex justify-between items-center text-left">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-emerald-100 line-clamp-1">{a.name}</span>
-                                                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{s.qty}x {a.unit || 'Item'}</span>
-                                                        </div>
-                                                        <span className="font-bold text-sm">{formatIDR(a.price[0] * s.qty)}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </>
-                                    ) : <p className="text-sm text-emerald-700 font-semibold italic opacity-50 text-left">Silakan pilih layanan...</p>}
-                                </div>
-
-                                {/* COUPON INPUT */}
-                                <div className="mb-10 text-left space-y-3">
-                                    <label className="text-[10px] font-bold uppercase text-emerald-500 ml-1 tracking-wider">Coupon</label>
-                                    <div className="flex gap-2">
-                                        <input 
-                                            type="text" 
-                                            value={couponCode}
-                                            onChange={(e) => setCouponCode(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
-                                            placeholder="Masukkan kode..." 
-                                            disabled={!!appliedCoupon || isChecking}
-                                            className={`flex-grow px-4 py-3 rounded-xl bg-emerald-900/40 border ${couponError ? 'border-red-500 shake' : 'border-emerald-800'} text-xs font-bold focus:outline-none focus:border-emerald-500 transition-all uppercase placeholder:normal-case tracking-wider`}
-                                        />
-                                        {appliedCoupon ? (
-                                            <button onClick={removeCoupon} className="px-4 py-3 bg-red-900/30 text-red-400 rounded-xl font-bold text-xs hover:bg-red-900 transition-all">Hapus</button>
-                                        ) : (
-                                            <button onClick={applyCoupon} disabled={isChecking || !couponCode} className="px-4 py-3 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl font-bold text-xs transition-all">{isChecking ? '...' : 'Cek'}</button>
-                                        )}
-                                    </div>
-                                    {couponError && <p className="text-[10px] font-semibold text-red-400 ml-1 italic">{couponError}</p>}
-                                    {appliedCoupon && <p className="text-[10px] font-bold text-emerald-400 ml-1 flex items-center gap-1"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg> {appliedCoupon.label} Aktif</p>}
-                                </div>
-
-                                <div className="border-t border-emerald-900 pt-8 mb-10 text-left">
-                                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-2 tracking-widest">Total Estimasi Terendah</p>
-                                    <p className="text-4xl font-bold tracking-tighter mb-2 text-white">{formatIDR(totals[0])}</p>
-                                    <div className="flex flex-col gap-1 opacity-70">
-                                        <p className="text-xs text-emerald-400 font-semibold italic">Estimasi Maks: {formatIDR(totals[1])}</p>
-                                        {appliedCoupon && <p className="text-xs text-emerald-300 font-bold italic">Anda Hemat: {formatIDR(totals[2])}</p>}
-                                    </div>
-                                </div>
-                                <button onClick={() => setShowInv(true)} disabled={!pkgId && selected.length === 0} className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-900/50 disabled:text-emerald-800 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-xl shadow-black/20 transform active:scale-95 text-lg uppercase tracking-widest">Buat Invoice</button>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        </div>
-                    </main>
+                        </section>
 
-                    {showInv && <Invoice clientInfo={clientInfo} pkgId={pkgId} selectedAddons={selected} discount={appliedCoupon} onClose={() => setShowInv(false)} />}
+                        {/* SECTION 03: CLIENT DETAILS + SUBMIT */}
+                        <section className="bg-emerald-900 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden">
+                            {/* Decorative Background */}
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+                            
+                            <div className="flex items-center gap-4 mb-10 text-left relative z-10">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold shadow-lg shadow-emerald-900/50">
+                                    <span className="material-symbols-rounded text-[24px]">looks_3</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white tracking-tight">Informasi & Konfirmasi</h2>
+                                    <p className="text-sm text-emerald-200 opacity-80">Lengkapi data diri untuk pemesanan layanan kustom</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                                <div className="space-y-6">
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">Nama Client</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">person</span>
+                                            <input name="name" value={clientInfo.name} onChange={handleClientChange} type="text" placeholder="Nama Lengkap" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">Perusahaan / Brand</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">business</span>
+                                            <input name="company" value={clientInfo.company} onChange={handleClientChange} type="text" placeholder="Nama Brand" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-6">
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">Alamat Email</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">mail</span>
+                                            <input name="email" value={clientInfo.email} onChange={handleClientChange} type="email" placeholder="client@email.com" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">WhatsApp / HP</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">call</span>
+                                            <input name="phone" value={clientInfo.phone} onChange={handleClientChange} type="text" placeholder="0812-XXXX-XXXX" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-12 relative z-10 pt-8 border-t border-emerald-800/50">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                                    <div className="text-left">
+                                        <p className="text-sm font-semibold text-emerald-200 mb-1 flex items-center gap-2"><span className="material-symbols-rounded text-[20px]">shopping_cart</span> Total Layanan Dipilih: {selected.length} Item</p>
+                                        <p className="text-xs text-emerald-400/60">Klik tombol di samping untuk kirim detail pesanan kustom</p>
+                                    </div>
+                                    <button 
+                                        onClick={handleCustomWhatsApp} 
+                                        disabled={selected.length === 0} 
+                                        className="w-full md:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-800 disabled:text-emerald-600 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-xl shadow-black/20 transform active:scale-95 text-lg flex items-center justify-center gap-3"
+                                    >
+                                        <span className="material-symbols-rounded">send</span>
+                                        Hubungi via WhatsApp
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+
+                    </main>
                 </div>
             );
         };
@@ -602,7 +399,4 @@ p className = "text-xs font-bold text-emerald-600 tracking-tight" > { formatIDR(
         root.render(<App />);
     </script>
 </body>
-
 </html>
-
-
