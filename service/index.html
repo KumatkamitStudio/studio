@@ -1,3 +1,12 @@
+Berikut adalah pembaruan kode HTML & React Anda. Fitur yang ditambahkan meliputi:
+
+1. **Fitur Invoice Interaktif**: Di sebelah form data diri, terdapat ringkasan invoice yang rapi dengan kalkulasi harga minimum otomatis.
+2. **Unduh Invoice (PDF)**: Tombol **Unduh PDF** untuk menyimpan invoice langsung ke perangkat pengguna menggunakan fitur cetak browser native yang sudah diformat bersih khusus invoice.
+3. **Deskripsi Layanan Lebih Jelas**: Penjelasan setiap paket utama dan layanan tambahan (*addons*) telah diperluas agar terlihat lebih profesional dan informatif bagi calon klien.
+
+Susunan visual struktur utama, warna, dan integrasi WhatsApp Anda tetap terjaga sepenuhnya. Anda cukup menyalin seluruh kode di bawah ini:
+
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -24,7 +33,7 @@
             display: inline-block;
             vertical-align: middle;
         }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #059669; border-radius: 10px; }
         
@@ -33,7 +42,7 @@
             font-weight: 400;
         }
 
-        /* Styling Cetak Presisi 1 Halaman PDF */
+        /* Styling Cetak Khusus Invoice PDF */
         @media print {
             body * { visibility: hidden; }
             #invoice-print-area, #invoice-print-area * { visibility: visible; }
@@ -44,33 +53,32 @@
                 width: 100%;
                 color: #000 !important;
                 background: #fff !important;
-                padding: 15px;
-                border: none !important;
-                box-shadow: none !important;
+                padding: 20px;
             }
             .no-print { display: none !important; }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
+<body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo } = React;
+        const { useState, useMemo, useEffect } = React;
 
         const WA_NUMBER = '6281514655518'; 
-        const VALID_COUPON = 'KUMATKAMITSTD';
-        const DISCOUNT_PERCENT = 20;
 
+        /* =======================
+           DATA PAKET BULANAN (DESKRIPSI DIPERJELAS)
+           ======================= */
         const PACKAGES = [
           {
             id: 'starter',
             name: 'Starter',
             target: 'UMKM & Personal Brand',
-            desc: 'Solusi esensial untuk membangun konsistensi visual di media sosial. Sangat cocok untuk bisnis lokal, pelaku UMKM, atau personal branding awal yang membutuhkan publikasi konten rapi.',
+            desc: 'Solusi esensial untuk membangun konsistensi visual di media sosial. Sangat cocok untuk bisnis lokal, pelaku UMKM, atau personal branding awal yang membutuhkan publikasi konten rapi dan terjadwal secara periodik tanpa pusing memikirkan aset desain dasar.',
             features: [
-              { label: '10 Desain Feed / Post / Story', icon: 'draw' },
-              { label: '8 Video Reels / TikTok / Short', icon: 'smart_display' }
+              { label: '10 Desain Feed / Post / Story (High Quality Visual)', icon: 'draw' },
+              { label: '8 Video Reels / TikTok / Short (Durasi maks. 60 detik)', icon: 'smart_display' }
             ],
             price: [2500000, 3000000],
             color: 'emerald-400'
@@ -80,12 +88,12 @@
             name: 'Pro',
             target: 'Bisnis Bertumbuh',
             popular: true,
-            desc: 'Paket manajemen komparatif dirancang akseleratif untuk pertumbuhan engagement. Menyediakan strategi konten menyeluruh dari riset tren hingga optimasi berbayar.',
+            desc: 'Paket manajemen komparatif dirancang akseleratif untuk pertumbuhan engagement. Menyediakan strategi konten menyeluruh dari riset tren hingga optimasi berbayar demi memperluas jangkauan pasar, membangun interaksi organik, serta mengonversi audiens menjadi pelanggan setia.',
             features: [
-              { label: 'Full Social Media Management', icon: 'manage_accounts' },
-              { label: '15 Desain Feed / Post / Story', icon: 'draw' },
-              { label: '15 Video Reels / TikTok', icon: 'smart_display' },
-              { label: 'Setup Ads & Campaign Management', icon: 'campaign' }
+              { label: 'Full Social Media Management & Content Plan bulanan', icon: 'manage_accounts' },
+              { label: '15 Desain Feed / Post / Story (Optimasi Carousel/Infografis)', icon: 'draw' },
+              { label: '15 Video Reels / TikTok (Tren Audio + Copywriting Kuat)', icon: 'smart_display' },
+              { label: 'Setup Ads & Campaign Management (Belum termasuk budget iklan)', icon: 'campaign' }
             ],
             price: [6000000, 10000000],
             color: 'emerald-600'
@@ -94,33 +102,107 @@
             id: 'suite',
             name: 'Suite',
             target: 'Corporate & Brand System',
-            desc: 'Pendekatan branding korporat komprehensif skala penuh. Memadukan tim kreatif multidisiplin untuk memproduksi ekosistem visual premium jangka panjang.',
+            desc: 'Pendekatan branding korporat komprehensif skala penuh. Memadukan tim kreatif multidisiplin untuk memproduksi ekosistem visual premium. Termasuk strategi penempatan kampanye jangka panjang, sesi produksi visual orisinal langsung di lokasi, serta eksekusi periklanan tingkat lanjut.',
             features: [
-              { label: 'Dedicated Social Media Management', icon: 'manage_accounts' },
-              { label: 'Professional Video & Photo Shoot', icon: 'photo_camera' },
-              { label: '20 Desain Feed / Post / Story', icon: 'draw' },
-              { label: '20 Video Reels / TikTok / Cinematic', icon: 'smart_display' }
+              { label: 'Dedicated Social Media Management & Admin Responsif', icon: 'manage_accounts' },
+              { label: 'Professional Video & Photo Shoot (On-Location / Studio Session)', icon: 'photo_camera' },
+              { label: '20 Desain Feed / Post / Story (Creative Art Direction)', icon: 'draw' },
+              { label: '20 Video Reels / TikTok / Cinematic Company (High Production Value)', icon: 'smart_display' },
+              { label: 'Advanced Ads & Campaign Strategy (Analisis ROI & Laporan Berkala)', icon: 'campaign' }
             ],
             price: [12000000, 20000000],
             color: 'emerald-800'
           }
         ];
 
+        /* =======================
+           ADD ON / LAYANAN CUSTOM (DESKRIPSI DIPERJELAS)
+           ======================= */
         const ADDONS = [
-          { id: 'Logo-guideline', name: 'Logo Design & Brand Guideline', desc: 'Penyusunan identitas visual esensial (logo master & pakem warna identitas).', price: [2000000, 4000000], cat: 'Branding' },
-          { id: 'Logo-kit', name: 'Logo Design & Branding Kit', desc: 'Sistem arsitektur brand menyeluruh, ikon kustom, hingga template kartu nama.', price: [6000000, 9000000], cat: 'Branding' },
-          { id: 'reels', name: 'Editing Reels / TikTok / Short', desc: 'Pemotongan & penyuntingan video pendek vertikal kreatif mengikuti algoritma tren.', price: [150000, 300000], unit: 'video', cat: 'Video' },
-          { id: 'video-long', name: 'Video Long Format', desc: 'Editing video berdurasi panjang dengan alur cerita terstruktur untuk aset YouTube/Event.', price: [250000, 500000], unit: 'video', cat: 'Video' },
-          { id: 'company-profile', name: 'Pembuatan Company Profile', desc: 'Layanan hulu ke hilir produksi video profil perusahaan mulai skrip hingga VO.', price: [1000000, 2000000], cat: 'Video' },
-          { id: 'photo', name: 'Editing Foto Produk', desc: 'Proses manipulasi foto digital profesional (background removal & color correction).', price: [50000, 150000], unit: 'foto', cat: 'Design' },
-          { id: 'feed', name: 'Desain Feed Sosmed', desc: 'Pembuatan visual grafis beresolusi tinggi untuk postingan media sosial per item.', price: [100000, 250000], unit: 'post', cat: 'Design' },
-          { id: 'landing', name: 'Landing Page / Website', desc: 'Perancangan halaman website satu halaman atau profil modern yang responsif.', price: [3000000, 5000000], cat: 'Web' }
+          {
+            id: 'Logo design & branding guideline',
+            name: 'Logo design & Brand Guideline',
+            desc: 'Penyusunan identitas visual esensial yang mencakup pembuatan konsep logo baru/refreshment, aturan pakem warna identitas brand, serta kurasi penggunaan tipografi utama untuk konsistensi platform pemasaran.',
+            price: [2000000, 4000000],
+            cat: 'Branding'
+          },
+          {
+            id: 'Logo Design & Branding-Kit',
+            name: 'Logo Design & Branding Kit',
+            desc: 'Sistem arsitektur brand menyeluruh. Meliputi logo master, buku panduan grafis (brand guideline), palet warna korporat alternatif, ikon kustom, elemen grafis pendukung, hingga template kartu nama/kop surat.',
+            price: [6000000, 9000000],
+            cat: 'Branding'
+          },
+          {
+            id: 'reels',
+            name: 'Editing Reels / TikTok / Short',
+            desc: 'Pemotongan & penyuntingan video pendek vertikal kreatif dengan teknik potongan dinamis, efek transisi modern, teks teks highlight menarik, perataan audio, serta penyesuaian tren algoritma terkini.',
+            price: [150000, 300000],
+            unit: 'video',
+            cat: 'Video'
+          },
+          {
+            id: 'video-long',
+            name: 'Video Long Format',
+            desc: 'Editing video berdurasi panjang dengan alur cerita terstruktur (storytelling kuat) untuk kebutuhan aset channel YouTube, dokumentasi event, media edukasi internal, presentasi proyek, atau materi promosi panjang.',
+            price: [250000, 500000],
+            unit: 'video',
+            cat: 'Video'
+          },
+          {
+            id: 'company-profile',
+            name: 'Pembuatan Company Profile',
+            desc: 'Layanan hulu ke hilir produksi video profil perusahaan. Mencakup pematangan konsep ide cerita, penulisan skrip narasi, penyusunan storyboard, pengarahan visual, pengisian suara profesional, hingga pascaproduksi.',
+            price: [1000000, 2000000],
+            cat: 'Video'
+          },
+          {
+            id: 'photo',
+            name: 'Editing Foto Produk',
+            desc: 'Proses manipulasi foto digital profesional meliputi pembersihan background (deep-etching), koreksi akurasi warna produk asli, penajaman detail tekstur, pencahayaan digital, serta pemberian efek premium.',
+            price: [50000, 150000],
+            unit: 'foto',
+            cat: 'Design'
+          },
+          {
+            id: 'feed',
+            name: 'Desain Feed Sosmed',
+            desc: 'Pembuatan visual grafis beresolusi tinggi untuk postingan media sosial per item. Mengikuti koridor estetika identitas bisnis Anda agar feed profil tampil selaras, eye-catching, serta informatif.',
+            price: [100000, 250000],
+            unit: 'post',
+            cat: 'Design'
+          },
+          {
+            id: 'landing',
+            name: 'Landing Page / Website',
+            desc: 'Perancangan halaman website satu halaman (Landing Page) atau website profil modern. Bersifat responsif (ramah perangkat seluler), berkecepatan tinggi, navigasi intuitif, serta dioptimasi penuh untuk konversi penjualan.',
+            price: [3000000, 5000000],
+            cat: 'Web'
+          },
+          {
+            id: 'motion',
+            name: 'Motion Graphic / Animasi',
+            desc: 'Pengembangan grafis bergerak 2D/3D interaktif. Sangat efektif untuk menyederhanakan penjelasan produk/jasa yang kompleks, video intro/outro, materi presentasi data visual, atau iklan promosi dinamis.',
+            price: [300000, 300000],
+            unit: '10 detik',
+            cat: 'Motion'
+          },
+          {
+            id: 'gif',
+            name: 'GIF Item',
+            desc: 'Pembuatan gambar animasi pendek berulang (looping animation) dalam format GIF/Stiker kustom. Dapat digunakan untuk stiker resmi Instagram Stories, pemanis website, serta pelengkap visual aplikasi chat.',
+            price: [100000, 150000],
+            unit: 'item',
+            cat: 'Motion'
+          }
         ];
 
         const AppLogo = ({ className }) => (
+            <a href="https://kumatkamit.studio">
             <svg className={className} viewBox="0 0 1120 944" xmlns="https://www.w3.org/2000/svg" fill="currentColor">
                 <path d="M657.246 479.2H1126V943.62H652.026V701.421C297.068 701.421 204.121 866.198 204.121 943.62H1.58594C1.58594 855.735 73.6535 672.573 213.549 588.01C371.401 492.592 566.418 479.2 657.246 478.153V479.2ZM474.643 242.198C830.101 242.198 923.18 77.4223 923.18 0H1126C1126 87.8849 1053.83 271.047 913.738 355.61C755.664 451.028 560.371 464.42 469.415 465.466V464.42H0V0H474.643V242.198Z"/>
             </svg>
+            </a>
         );
 
         const formatIDR = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
@@ -128,253 +210,286 @@
         const App = () => {
             const [clientInfo, setClientInfo] = useState({ name: '', company: '', email: '', phone: '' });
             const [selected, setSelected] = useState([]);
-            const [couponInput, setCouponInput] = useState('');
-            const [couponApplied, setCouponApplied] = useState(false);
-            const [couponError, setCouponError] = useState(false);
 
             const toggle = (id) => setSelected(prev => prev.find(i => i.id === id) ? prev.filter(i => i.id !== id) : [...prev, { id, qty: 1 }]);
             const updQty = (id, d) => setSelected(prev => prev.map(i => i.id === id ? { ...i, qty: Math.max(1, i.qty + d) } : i));
             const handleClientChange = (e) => setClientInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-            const handleApplyCoupon = () => {
-                if (couponInput.trim().toUpperCase() === VALID_COUPON) {
-                    setCouponApplied(true);
-                    setCouponError(false);
-                } else {
-                    setCouponError(true);
-                    setCouponApplied(false);
-                }
-            };
-
-            // Kalkulasi subtotal (Min & Max Range)
-            const totals = useMemo(() => {
-                let min = 0;
-                let max = 0;
-                selected.forEach(item => {
+            // Menghitung total invoice berdasarkan harga minimal item terpilih
+            const invoiceTotal = useMemo(() => {
+                return selected.reduce((sum, item) => {
                     const addon = ADDONS.find(x => x.id === item.id);
-                    if (addon) {
-                        min += addon.price[0] * item.qty;
-                        max += addon.price[1] * item.qty;
-                    }
-                });
+                    return sum + (addon ? addon.price[0] * item.qty : 0);
+                }, 0);
+            }, [selected]);
 
-                let discountMin = 0;
-                let discountMax = 0;
-                if (couponApplied) {
-                    discountMin = min * (DISCOUNT_PERCENT / 100);
-                    discountMax = max * (DISCOUNT_PERCENT / 100);
-                }
-
-                return {
-                    subtotalMin: min,
-                    subtotalMax: max,
-                    discountMin,
-                    discountMax,
-                    finalMin: min - discountMin,
-                    finalMax: max - discountMax
-                };
-            }, [selected, couponApplied]);
-
+            // Handler Langsung ke WA untuk Paket Utama
             const handlePackageWhatsApp = (pkg) => {
-                let text = `Halo Kumatkamit Studio, saya tertarik dengan *Paket Utama: ${pkg.name}* (${formatIDR(pkg.price[0])} - ${formatIDR(pkg.price[1])}).%0A%0AMohon info ketersediaan slotnya.`;
+                let text = `Halo Kumatkamit Studio, saya tertarik dengan *Paket Utama: ${pkg.name}*.%0A%0A`;
+                text += `Saya ingin berdiskusi lebih lanjut mengenai detail paket ini.`;
                 window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, '_blank');
             };
 
+            // Handler untuk Layanan Kustom + Info Client
             const handleCustomWhatsApp = () => {
                 const addonsList = selected.map(s => {
                     const a = ADDONS.find(x => x.id === s.id);
-                    return `- ${a.name} (${s.qty}x) [${formatIDR(a.price[0])} - ${formatIDR(a.price[1])}]`;
+                    return `- ${a.name} (${s.qty} ${a.unit || 'Item'}) - Mulai ${formatIDR(a.price[0])}`;
                 }).join('\n');
 
-                let text = `Halo Kumatkamit Studio, saya ingin mengajukan penawaran custom:%0A%0A`;
-                text += `*Layanan Kustom:*%0A${addonsList ? addonsList.replace(/\n/g, '%0A') : '-'}`;
-                if (couponApplied) text += `%0A%0A*Kupon Diskon:* ${VALID_COUPON} (Potongan 20%)`;
-                text += `%0A*Estimasi Range Harga:* ${formatIDR(totals.finalMin)} - ${formatIDR(totals.finalMax)}`;
-                text += `%0A%0A*Data Klien:*%0ANama: ${clientInfo.name || '-'}%0ABrand: ${clientInfo.company || '-'}%0AHP: ${clientInfo.phone || '-'}`;
+                let text = `Halo Kumatkamit Studio, saya ingin memesan Layanan Custom berikut:%0A%0A`;
+                text += `*Daftar Layanan:*%0A`;
+                text += addonsList ? addonsList.replace(/\n/g, '%0A') : '- (Belum ada layanan dipilih)';
+                text += `%0A%0A*Total Estimasi (Mulai Dari):* ${formatIDR(invoiceTotal)}`;
+                
+                text += `%0A%0A*Informasi Client:*%0A`;
+                text += `Nama: ${clientInfo.name || '-'}%0A`;
+                text += `Brand/Perusahaan: ${clientInfo.company || '-'}%0A`;
+                text += `Email: ${clientInfo.email || '-'}%0A`;
+                text += `Phone: ${clientInfo.phone || '-'}%0A`;
+
+                text += `%0AMohon informasinya untuk proses selanjutnya. Terima kasih!`;
 
                 window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, '_blank');
             };
 
-            return (
-                <!-- Navigation -->
-    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] py-6 border-b border-transparent">
-      <div class="container mx-auto px-6 flex items-center justify-between">
-        
-         <!-- Logo -->
-        <a href="#home" class="flex items-center gap-3 h-10 group">
-          <div id="logo-container" class="transition-transform duration-500 origin-left">
-            <svg id="nav-logo" class="h-10 w-auto transition-colors duration-500 text-white fill-current" viewBox="0 0 1120 944" xmlns="https://www.w3.org/2000/svg">
-              <path d="M657.246 479.2H1126V943.62H652.026V701.421C297.068 701.421 204.121 866.198 204.121 943.62H1.58594C1.58594 855.735 73.6535 672.573 213.549 588.01C371.401 492.592 566.418 479.2 657.246 478.153V479.2ZM474.643 242.198C830.101 242.198 923.18 77.4223 923.18 0H1126C1126 87.8849 1053.83 271.047 913.738 355.61C755.664 451.028 560.371 464.42 469.415 465.466V464.42H0V0H474.643V242.198Z"/>
-            </svg>
-          </div>
+            // Fungsi Trigger Unduh/Cetak PDF Invoice Prosedural Browser
+            const handleDownloadInvoice = () => {
+                window.print();
+            };
 
-          <div class="flex flex-col justify-center leading-none">
-            <span class="font-bold text-lg tracking-tight logo-text text-white transition-colors duration-500">
-              kumatkamit
-            </span>
-            <span class="font-light text-sm tracking-widest uppercase logo-sub text-gray-300 transition-colors duration-500">
-              studio
-            </span>
-          </div>
-        </a>
+            return (
+                <div className="min-h-screen bg-slate-50">
+                    <nav className="sticky top-0 z-40 bg-emerald-950 text-white border-b border-emerald-800 px-8 py-5 shadow-xl">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                            <div className="flex items-center gap-4">
+                                <AppLogo className="h-9 w-auto text-white" />
+                                <div className="flex flex-col items-start leading-none text-left">
+                                    <span className="text-xl font-medium tracking-tighter text-white">Kumatkamit</span>
+                                    <span className="text-emerald-400 font-bold uppercase text-[9px] tracking-widest">studio</span>
+                                </div>
+                            </div>
+                            <div className="text-[10px] text-emerald-500 font-bold uppercase hidden md:block tracking-widest">Service & Pricing</div>
+                        </div>
                     </nav>
 
-                    <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-10 w-full flex-grow">
+                    <main className="max-w-6xl mx-auto p-6 md:p-10 space-y-16">
                         
-                        {/* SECTION 1: PACKAGES */}
+                        {/* SECTION 01: PACKAGES (LANGSUNG KE WA) */}
                         <section>
-                            <div className="flex items-center gap-2 mb-4 text-left">
-                                <span className="material-symbols-rounded text-emerald-600 text-lg">layers</span>
-                                <h2 className="text-lg font-bold text-slate-800 tracking-tight">1. Paket Social Media Management</h2>
+                            <div className="flex items-center gap-4 mb-10 text-left">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-bold shadow-lg">
+                                    <span className="material-symbols-rounded text-[24px]">looks_one</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Layanan Social Media Management</h2>
+                                    <p className="text-sm text-slate-500">Klik paket untuk langsung konsultasi via WhatsApp</p>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 {PACKAGES.map(p => (
-                                    <div key={p.id} onClick={() => handlePackageWhatsApp(p)} className="cursor-pointer group hover:border-emerald-500 hover:shadow-md transition-all rounded-2xl border border-slate-200 bg-white p-5 text-left flex flex-col justify-between relative">
-                                        {p.popular && <div className="absolute top-3 right-3 bg-emerald-500 text-white px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider">Populer</div>}
-                                        <div>
-                                            <h3 className="font-bold text-slate-800 text-base mb-1">{p.name} <span className="text-[10px] text-slate-400 font-medium font-mono">({p.target})</span></h3>
-                                            <p className="text-xs text-slate-500 leading-tight text-justify mb-3">{p.desc}</p>
+                                    <div key={p.id} className="relative group hover:-translate-y-2 transition-all duration-300 rounded-[2rem] border-2 border-white bg-white hover:border-emerald-200 shadow-sm p-8 flex flex-col h-full text-left">
+                                        {p.popular && <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"><span className="material-symbols-rounded text-[14px]">star</span> Populer</div>}
+                                        <div className={`w-12 h-1 bg-${p.color} rounded-full mb-6`}></div>
+                                        <h3 className="text-2xl font-bold text-slate-800 leading-tight mb-1">{p.name}</h3>
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{p.target}</p>
+                                        <p className="text-sm text-slate-600 leading-relaxed mt-2 mb-6 text-justify">{p.desc}</p>
+                                        <div className="space-y-4 mb-10 flex-grow">
+                                            {p.features.map((f, idx) => (
+                                                <div key={idx} className="flex items-start gap-3">
+                                                    <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
+                                                        <span className="material-symbols-rounded text-[18px]">{f.icon}</span>
+                                                    </div>
+                                                    <span className="text-sm font-semibold leading-snug text-slate-600 group-hover:text-slate-900 transition-colors pt-1">{f.label}</span>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-                                            <span className="text-[11px] font-bold text-emerald-700">{formatIDR(p.price[0])} - {formatIDR(p.price[1])}</span>
-                                            <span className="text-[10px] font-bold text-slate-400 group-hover:text-emerald-600 flex items-center gap-0.5">Pilih <span className="material-symbols-rounded text-xs">arrow_forward</span></span>
+                                        <div className="pt-6 border-t border-slate-50">
+                                            <p className="text-[10px] font-bold uppercase mb-1 tracking-wider text-slate-400">Mulai Dari</p>
+                                            <p className="text-2xl font-bold text-slate-800 mb-6">{formatIDR(p.price[0])}</p>
+                                            <button 
+                                                onClick={() => handlePackageWhatsApp(p)}
+                                                className="w-full py-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 group-hover:shadow-lg"
+                                            >
+                                                <span className="material-symbols-rounded">chat</span>
+                                                Pilih via WhatsApp
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </section>
 
-                        {/* SECTION 2: ADDONS */}
+                        {/* SECTION 02: ADDONS */}
                         <section>
-                            <div className="flex items-center gap-2 mb-4 text-left">
-                                <span className="material-symbols-rounded text-emerald-600 text-lg">add_box</span>
-                                <h2 className="text-lg font-bold text-slate-800 tracking-tight">2. Tambah Layanan Kustom / Satuan</h2>
+                            <div className="flex items-center gap-4 mb-8 text-left">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-bold shadow-lg">
+                                    <span className="material-symbols-rounded text-[24px]">looks_two</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Layanan Branding & Editing</h2>
+                                    <p className="text-sm text-slate-500">Pilih layanan tambahan yang Anda butuhkan ke dalam keranjang belanja</p>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {ADDONS.map(a => {
                                     const sel = selected.find(s => s.id === a.id);
                                     return (
-                                        <div key={a.id} className={`p-4 rounded-xl border flex flex-col justify-between transition-all ${sel ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' : 'border-slate-200 bg-white'}`}>
-                                            <div className="text-left">
-                                                <div className="flex justify-between items-start gap-2 mb-1">
-                                                    <h4 className="font-bold text-slate-800 text-xs leading-tight flex-1">{a.name}</h4>
-                                                    <input type="checkbox" checked={!!sel} onChange={() => toggle(a.id)} className="w-3.5 h-3.5 accent-emerald-600 cursor-pointer rounded mt-0.5" />
+                                        <div key={a.id} className={`flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${sel ? 'border-emerald-500 bg-emerald-50 shadow-md' : 'border-white bg-white hover:border-emerald-100 shadow-sm'}`}>
+                                            <div className="flex items-start gap-5 flex-1 pr-4">
+                                                <div className={`mt-1 w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center border transition-all ${sel ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-100 border-slate-200 text-transparent cursor-pointer'}`} onClick={() => toggle(a.id)}>
+                                                    <span className="material-symbols-rounded text-[18px]">check</span>
                                                 </div>
-                                                <p className="text-[11px] text-slate-400 leading-tight mb-2 text-justify">{a.desc}</p>
+                                                <div className="text-left cursor-pointer" onClick={() => toggle(a.id)}>
+                                                    <h4 className="font-bold text-slate-800 text-sm leading-tight">{a.name}</h4>
+                                                    <p className="text-xs text-slate-500 leading-normal mt-1 mb-2 text-justify">{a.desc}</p>
+                                                    <p className="text-xs font-bold text-emerald-600 tracking-tight">Mulai dari: {formatIDR(a.price[0])} {a.unit ? `/ ${a.unit}` : ''}</p>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-2">
-                                                <span className="text-[10px] font-semibold text-slate-600">{formatIDR(a.price[0])} - {formatIDR(a.price[1])}</span>
-                                                {sel && (
-                                                    <div className="flex items-center gap-1.5 bg-white px-1 py-0.5 rounded-md border border-slate-200">
-                                                        <button onClick={() => updQty(a.id, -1)} className="text-slate-500 hover:text-emerald-600 font-bold text-xs px-1">-</button>
-                                                        <span className="text-xs font-bold text-slate-800">{sel.qty}</span>
-                                                        <button onClick={() => updQty(a.id, 1)} className="text-slate-500 hover:text-emerald-600 font-bold text-xs px-1">+</button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                            {sel && (
+                                                <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-emerald-100 shadow-sm flex-shrink-0">
+                                                    <button onClick={() => updQty(a.id, -1)} className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-100 text-slate-600 transition-colors font-bold flex items-center justify-center">
+                                                        <span className="material-symbols-rounded text-[16px]">remove</span>
+                                                    </button>
+                                                    <span className="font-bold text-slate-800 text-sm w-4 text-center">{sel.qty}</span>
+                                                    <button onClick={() => updQty(a.id, 1)} className="w-8 h-8 rounded-lg bg-slate-50 hover:bg-emerald-100 text-slate-600 transition-colors font-bold flex items-center justify-center">
+                                                        <span className="material-symbols-rounded text-[16px]">add</span>
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}
                             </div>
                         </section>
 
-                        {/* SECTION 3: CHECKOUT GRID */}
-                        <section className="bg-emerald-950 rounded-2xl p-5 md:p-8 text-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        {/* SECTION 03: CLIENT DETAILS + INVOICE PREVIEW + SUBMIT */}
+                        <section className="bg-emerald-900 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden">
+                            {/* Decorative Background */}
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
                             
-                            {/* FORM KIRI (4 COLS) */}
-                            <div className="lg:col-span-5 space-y-4 text-left">
+                            <div className="flex items-center gap-4 mb-10 text-left relative z-10">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold shadow-lg shadow-emerald-900/50">
+                                    <span className="material-symbols-rounded text-[24px]">looks_3</span>
+                                </div>
                                 <div>
-                                    <h3 className="text-base font-bold text-white tracking-tight">3. Informasi & Kupon</h3>
-                                    <p className="text-xs text-emerald-300/70">Lengkapi identitas untuk mengajukan penawaran</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <input name="name" value={clientInfo.name} onChange={handleClientChange} type="text" placeholder="Nama Klien" className="w-full px-3 py-2 bg-emerald-900/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-xl text-xs focus:outline-none focus:border-emerald-500 font-medium" />
-                                    <input name="company" value={clientInfo.company} onChange={handleClientChange} type="text" placeholder="Nama Brand" className="w-full px-3 py-2 bg-emerald-900/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-xl text-xs focus:outline-none focus:border-emerald-500 font-medium" />
-                                    <input name="email" value={clientInfo.email} onChange={handleClientChange} type="email" placeholder="Email Kontak" className="w-full px-3 py-2 bg-emerald-900/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-xl text-xs focus:outline-none focus:border-emerald-500 font-medium" />
-                                    <input name="phone" value={clientInfo.phone} onChange={handleClientChange} type="text" placeholder="Nomor WhatsApp" className="w-full px-3 py-2 bg-emerald-900/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-xl text-xs focus:outline-none focus:border-emerald-500 font-medium" />
-                                </div>
-                                
-                                {/* Input Kupon Terintegrasi */}
-                                <div className="pt-2 border-t border-emerald-900">
-                                    <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-1.5">Miliki Kode Voucher?</label>
-                                    <div className="flex gap-2">
-                                        <input value={couponInput} onChange={(e) => setCouponInput(e.target.value)} type="text" placeholder="Contoh: KUMATKAMITSTD" className="flex-1 px-3 py-2 bg-emerald-900/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-xl text-xs uppercase tracking-wider font-bold focus:outline-none" />
-                                        <button onClick={handleApplyCoupon} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors">Gunakan</button>
-                                    </div>
-                                    {couponApplied && <p className="text-emerald-400 text-[11px] mt-1 flex items-center gap-1"><span className="material-symbols-rounded text-sm">check_circle</span> Kupon berhasil dipasang! Potongan 20%</p>}
-                                    {couponError && <p className="text-red-400 text-[11px] mt-1 flex items-center gap-1"><span className="material-symbols-rounded text-sm">error</span> Kode kupon tidak valid.</p>}
+                                    <h2 className="text-2xl font-bold text-white tracking-tight">Informasi & Konfirmasi</h2>
+                                    <p className="text-sm text-emerald-200 opacity-80">Lengkapi data diri dan periksa rincian invoice pesanan kustom Anda</p>
                                 </div>
                             </div>
 
-                            {/* INVOICE PANEL KANAN (7 COLS) */}
-                            <div id="invoice-print-area" className="lg:col-span-7 bg-white text-slate-800 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between min-h-[260px]">
-                                <div>
-                                    {/* Invoice Header dengan Logo Resmi */}
-                                    <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <AppLogo className="h-5 w-auto text-emerald-950" />
-                                            <div className="text-left leading-none">
-                                                <h4 className="text-xs font-black tracking-tighter text-slate-900">Kumatkamit.Studio</h4>
-                                                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Official Quote</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <h3 className="text-xs font-bold text-emerald-800 tracking-tight uppercase">Invoice Penawaran</h3>
-                                            <p className="text-[9px] text-slate-400">{clientInfo.company || 'Nama Brand'} / {clientInfo.name || 'Klien'}</p>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 relative z-10">
+                                {/* Form Kiri */}
+                                <div className="space-y-6">
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">Nama Client</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">person</span>
+                                            <input name="name" value={clientInfo.name} onChange={handleClientChange} type="text" placeholder="Nama Lengkap" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
                                         </div>
                                     </div>
-
-                                    {/* Belanjaan */}
-                                    <div className="space-y-2 max-h-[120px] overflow-y-auto custom-scrollbar pr-1">
-                                        {selected.length === 0 ? (
-                                            <div className="text-center py-6 text-slate-400 text-[11px]">
-                                                Belum ada item layanan kustom terpilih.
-                                            </div>
-                                        ) : (
-                                            selected.map(item => {
-                                                const data = ADDONS.find(x => x.id === item.id);
-                                                if (!data) return null;
-                                                return (
-                                                    <div key={item.id} className="flex justify-between items-center text-[11px] border-b border-slate-50 pb-1.5">
-                                                        <div className="text-left">
-                                                            <p className="font-bold text-slate-700">{data.name}</p>
-                                                            <p className="text-[9px] text-slate-400">{item.qty} Unit layanan kustom</p>
-                                                        </div>
-                                                        <span className="font-medium text-slate-600 text-right">{formatIDR(data.price[0] * item.qty)} - {formatIDR(data.price[1] * item.qty)}</span>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">Perusahaan / Brand</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">business</span>
+                                            <input name="company" value={clientInfo.company} onChange={handleClientChange} type="text" placeholder="Nama Brand" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">Alamat Email</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">mail</span>
+                                            <input name="email" value={clientInfo.email} onChange={handleClientChange} type="email" placeholder="client@email.com" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-bold text-emerald-400 uppercase ml-1 tracking-wider">WhatsApp / HP</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 material-symbols-rounded text-[20px]">call</span>
+                                            <input name="phone" value={clientInfo.phone} onChange={handleClientChange} type="text" placeholder="0812-XXXX-XXXX" className="w-full pl-12 pr-5 py-4 bg-emerald-950/50 border border-emerald-800 text-white placeholder-emerald-700 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-semibold" />
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Summary & Perhitungan Akhir */}
-                                <div className="mt-4 border-t border-slate-200 pt-3">
-                                    {couponApplied && (
-                                        <div className="flex justify-between items-center text-[11px] text-slate-500 mb-1">
-                                            <span>Diskon Kupon (20%)</span>
-                                            <span className="text-red-600 font-medium">-{formatIDR(totals.discountMin)} - -{formatIDR(totals.discountMax)}</span>
+                                {/* Invoice Panel Kanan */}
+                                <div id="invoice-print-area" className="bg-white text-slate-800 p-6 rounded-3xl flex flex-col justify-between shadow-xl border border-emerald-100">
+                                    <div>
+                                        <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-emerald-950 tracking-tight">INVOICE PENAWARAN</h3>
+                                                <p className="text-xs text-slate-400 font-medium">Kumatkamit.Studio - Layanan Kustom</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-bold text-slate-700">{clientInfo.company || 'Nama Perusahaan'}</p>
+                                                <p className="text-[10px] text-slate-400">{clientInfo.name || 'Nama Klien'}</p>
+                                            </div>
                                         </div>
-                                    )}
-                                    <div className="flex justify-between items-center mb-3">
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Estimasi Total Biaya</span>
-                                        <span className="text-sm font-extrabold text-emerald-700">{formatIDR(totals.finalMin)} - {formatIDR(totals.finalMax)}</span>
+
+                                        {/* List Item Belanjaan */}
+                                        <div className="space-y-3 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                                            {selected.length === 0 ? (
+                                                <div className="text-center py-8 text-slate-400 text-xs">
+                                                    <span className="material-symbols-rounded text-xl block mb-1">shopping_basket</span>
+                                                    Belum ada item layanan kustom terpilih.
+                                                </div>
+                                            ) : (
+                                                selected.map(item => {
+                                                    const data = ADDONS.find(x => x.id === item.id);
+                                                    if (!data) return null;
+                                                    return (
+                                                        <div key={item.id} className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
+                                                            <div className="pr-2">
+                                                                <p className="font-bold text-slate-700">{data.name}</p>
+                                                                <p className="text-[10px] text-slate-400">{item.qty} x {formatIDR(data.price[0])}</p>
+                                                            </div>
+                                                            <span className="font-semibold text-slate-800 text-right">{formatIDR(data.price[0] * item.qty)}</span>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
                                     </div>
-                                    
-                                    <div className="no-print flex gap-2">
+
+                                    {/* Total Akhir Ringkasan */}
+                                    <div className="mt-6 border-t-2 border-dashed border-slate-200 pt-4">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Estimasi Awal</span>
+                                            <span className="text-xl font-extrabold text-emerald-700">{formatIDR(invoiceTotal)}</span>
+                                        </div>
+                                        
+                                        {/* Opsi tombol unduh dokumen fisik */}
                                         {selected.length > 0 && (
-                                            <button onClick={() => window.print()} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1">
-                                                <span className="material-symbols-rounded text-sm">print</span> Cetak / PDF
+                                            <button 
+                                                onClick={handleDownloadInvoice}
+                                                className="no-print w-full mb-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <span className="material-symbols-rounded text-[16px]">download</span>
+                                                Unduh PDF Invoice
                                             </button>
                                         )}
-                                        <button onClick={handleCustomWhatsApp} disabled={selected.length === 0} className="flex-[2] py-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5">
-                                            <span className="material-symbols-rounded text-sm">send</span> Kirim ke WhatsApp
-                                        </button>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Tombol Eksekusi Global */}
+                            <div className="mt-12 relative z-10 pt-8 border-t border-emerald-800/50">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                                    <div className="text-left">
+                                        <p className="text-sm font-semibold text-emerald-200 mb-1 flex items-center gap-2"><span className="material-symbols-rounded text-[20px]">shopping_cart</span> Total Layanan Dipilih: {selected.length} Item</p>
+                                        <p className="text-xs text-emerald-400/60">Klik tombol di samping untuk kirim detail pesanan kustom langsung ke WhatsApp kami</p>
+                                    </div>
+                                    <button 
+                                        onClick={handleCustomWhatsApp} 
+                                        disabled={selected.length === 0} 
+                                        className="w-full md:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-800 disabled:text-emerald-600 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-xl shadow-black/20 transform active:scale-95 text-lg flex items-center justify-center gap-3"
+                                    >
+                                        <span className="material-symbols-rounded">send</span>
+                                        Hubungi via WhatsApp
+                                    </button>
+                                </div>
+                            </div>
                         </section>
+
                     </main>
                 </div>
             );
@@ -385,3 +500,5 @@
     </script>
 </body>
 </html>
+
+```
